@@ -1,0 +1,8 @@
+#ignore configs, logs and Sensitive files
+*.ini
+*.conf
+*.monit
+
+*.log
+
+.DS_Store
