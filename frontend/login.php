@@ -8,11 +8,11 @@ if (!isset($_POST))
 	exit(0);
 }
 $request = $_POST;
-$response = "unsupported request type, politely FUCK OFF";
+$response = "unsupported request type, politely BYE";
 switch ($request["type"])
 {
 	case "login":
-		$response = "login, YAY  we can do that";
+		$response = "login, YAY!!!!  we can do that";
 	break;
 }
 echo json_encode($response);
