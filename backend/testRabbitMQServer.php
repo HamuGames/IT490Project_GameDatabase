@@ -12,6 +12,14 @@ function doLogin($username,$password)
     //return false if not valid
 }
 
+function doRegister($fName,$lName,$email,$username,$password)
+{
+	//lookup if user exists
+	//if not create user. 
+	return true;
+	//return false if not valid
+	}
+
 function requestProcessor($request)
 {
   echo "received request".PHP_EOL;
@@ -24,8 +32,12 @@ function requestProcessor($request)
   {
     case "login":
       return doLogin($request['username'],$request['password']);
+    case "register":
+	    $test_hash = password_hash($request['password'], PASSWORD_DEFAULT);
+	    echo "Hashed: " .  $test_hash . PHP_EOL;
+	    return doRegister($request['fName'],$request['lName'],$request['email'],$request['username'],$request['password']);
     case "validate_session":
-      return doValidate($request['sessionId']);
+	    return doValidate($request['sessionId']); 
   }
   return array("returnCode" => '0', 'message'=>"Server received request and processed");
 }
