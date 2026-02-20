@@ -1,5 +1,6 @@
 <?php
 
+require_once('../backend/rabbitMQLib.inc');
 
 if (!isset($_POST))
 {
@@ -9,10 +10,13 @@ if (!isset($_POST))
 }
 $request = $_POST;
 $response = "unsupported request type, politely BYE";
+
+$client = new rabbitMQClient("../backend/testRabbitMQ.ini","testServer");
+
 switch ($request["type"])
 {
 	case "login":
-		$response = "login, YAY!!!!  we can do that";
+		$response = $client->send_request($request);
 	break;
 }
 echo json_encode($response);
