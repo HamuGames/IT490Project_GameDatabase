@@ -1,0 +1,46 @@
+<html>
+<script>
+
+function HandleRegisterResponse(response)
+{
+	var text = JSON.parse(response);
+//	document.getElementById("textResponse").innerHTML = response+"<p>";	
+	document.getElementById("textResponse").innerHTML = "response: "+text+"<p>";
+}
+
+function SendRegisterRequest(fName,lName,email,username,password)
+{
+	var request = new XMLHttpRequest();
+	request.open("POST","registration.php",true);
+	request.setRequestHeader("Content-Type","application/x-www-form-urlencoded");
+	request.onreadystatechange= function ()
+	{
+		
+		if ((this.readyState == 4)&&(this.status == 200))
+		{
+			HandleRegisterResponse(this.responseText);
+		}		
+	}
+	request.send("type=register&fName="+fName+"&lName="+lName+"&email="+email+"&username"+username+"&password"+password);
+}
+</script>
+
+<h1>Registration Page</h1>
+<body>
+<div id="textResponse">
+awaiting response
+</div>
+<form onsubmit="event.preventDefault();
+	SendRegisterRequest(document.getElementById('fName').value,document.getElementById('lName').value,document.getElementById('email').value,document.getElementById('username').value,document.getElementById('password').value);">
+	<input type="text" id="fName" placeholder="First Name" required><br>
+	<input type="text" id="lName" placeholder="Last Name" required><br>
+	<input type="text" id="email" placeholder="Your Email" required><br>
+	<input type="text" id="username" placeholder="New Username" required><br>
+	<input type="password" id="password" placeholder"New Password" required><br>
+	<button type="submit">Register Now</button><br>
+	<a href="index.html">Login here</a>
+
+</form>
+</body>
+</html>
+
