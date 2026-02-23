@@ -6,19 +6,67 @@ require_once('rabbitMQLib.inc');
 
 function doLogin($username,$password)
 {
-    // lookup username in databas
-    // check password
-    return true;
-    //return false if not valid
+    $mydb = new mysqli("127.0.0.1", "Hamu", "11301250", "IT490DB");
+
+    if ($mydb->connect_error){
+	    return array("status" => false, "message" => "Connection to Database failed"); }
+
+    $stmt = $mydb->prepare("SELECT password FROM users WHERE username = ?");	
+$stmt->bind_param("s", $username);
+$stmt->execute();
+$result = $stmt->get_result();
+
+if ($result->num_rows > 0) {
+	$row = $result->fetch_assoc();
+	$stored_hash = $row['password'];
+	if (password_verify($password, $stored_hash)) {
+	return array("status" => true, "message" => "LETS GOOOOOO");
+	}
+	else{
+	return array("status" => false, "message" => "Wrong Password");
+	}}
+	else{
+	return array("status" => false, "message" => "No User found");
+	}
+	$stmt->close();
+	$mydb->close();
 }
 
 function doRegister($fName,$lName,$email,$username,$password)
 {
-	//lookup if user exists
-	//if not create user. 
-	return true;
-	//return false if not valid
+	$mydb = new mysqli("127.0.0.1", "Hamu", "11301250", "IT490DB");
+
+    if ($mydb->connect_error){
+            return array("status" => false, "message" => "Connection to Database failed"); }
+
+	$stmt = $mydb->prepare("SELECT username FROM users WHERE username = ?");
+	$stmt->bind_param("s", $username);
+	$stmt->execute();
+	$stmt->store_result();
+
+	if ($stmt->num_rows > 0) {
+		$stmt->close();
+		$mydb->close();
+		return array("status" => false, "message" => "Username is taken");
 	}
+	$stmt->close();
+
+	$hash = password_hash($password, PASSWORD_DEFAULT);
+
+	$createUser = $mydb->prepare("INSERT INTO users (firstname, lastname, email, username, password) VALUES (?, ?, ?, ?, ?)");
+	$createUser->bind_param("sssss", $fName, $lName, $email, $username, $hash);
+
+	if ($createUser->execute()) {
+		$createUser->close();
+		$mydb->close();
+		return array("status" => true, "message" => "You have Registered successfully!");
+	}
+	else {
+		$createUser->close();
+		$mydb->close();
+		return array("status" => false, "message" => "Failed to Register");
+	}
+}
 
 function requestProcessor($request)
 {

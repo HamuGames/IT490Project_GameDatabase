@@ -1,4 +1,7 @@
 <?php
+ini_set('display_errors', 1);
+ini_set('display_startup_errors', 1);
+error_reporting(E_ALL);
 
 require_once('../backend/rabbitMQLib.inc');
 
@@ -17,9 +20,18 @@ switch ($request["type"])
 {
 	case "login":
 		$response = $client->send_request($request);
+		if (!isset($response)) {
+		echo json_encode(["status" => false, "message" => "RabbitMQ Returned Nothing"]);
+		exit(0);
+		}
+		echo json_encode($response);
+		exit(0);
 	break;
 }
-echo json_encode($response);
+//if (is_array($response));{
+	echo json_encode($response);// }
+//else { 
+//	echo $response; }
 exit(0);
 
 ?>
