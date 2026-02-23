@@ -3,12 +3,11 @@
 
 function HandleLoginResponse(response)
 {
-alert("MESSAGE: " + response);
-
-	//	var text = JSON.parse(response);
+		var text = JSON.parse(response);
 // document.getElementById("textResponse").innerHTML = response+"<p>";     
       //  document.getElementById("textResponse").innerHTML = "response: "+text+"<p>";
-	
+alert("MESSAGE: " + text.message);
+	document.getElementById("textResponse").innerHTML = text.message;
 }
 
 function SendLoginRequest(username,password)
@@ -21,8 +20,12 @@ function SendLoginRequest(username,password)
 		
 		if ((this.readyState == 4)&&(this.status == 200))
 		{
+			console.log("RESPONSE: ", this.responseText);
 			HandleLoginResponse(this.responseText);
-		}		
+		}
+		else{
+			alert("Server error: " + this.status);
+		}
 	}
 	request.send("type=login&username="+username+"&password="+password);
 }
@@ -39,11 +42,10 @@ function SendLoginRequest(username,password)
 <div id="textResponse">
 awaiting response
 </div>
-<form onsubmit="event.preventDefault();
-	SendLoginRequest(document.getElementById('user').value,document.getElementById('pass').value);">
+<form>
 	<input type="text" id="user" placeholder="Username" required>
 	<input type="password" id="pass" placeholder"Password" required>
-	<button type="submit">Login</button><br>
+	<button type="button" onclick=" SendLoginRequest(document.getElementById('user').value,document.getElementById('pass').value);">Login</button><br>
 	<a href="registration.html">register here</a>
 </form>
 </body>
