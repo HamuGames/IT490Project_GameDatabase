@@ -5,7 +5,8 @@ function HandleRegisterResponse(response)
 {
 	var text = JSON.parse(response);
 //	document.getElementById("textResponse").innerHTML = response+"<p>";	
-	document.getElementById("textResponse").innerHTML = "response: "+text+"<p>";
+//	document.getElementById("textResponse").innerHTML = "response: "+text+"<p>";
+document.getElementById("textResponse").innerHTML = text.message;
 }
 
 function SendRegisterRequest(fName,lName,email,username,password)
@@ -36,14 +37,13 @@ function SendRegisterRequest(fName,lName,email,username,password)
 <div id="textResponse">
 awaiting response
 </div>
-<form onsubmit="event.preventDefault();
-	SendRegisterRequest(document.getElementById('fName').value,document.getElementById('lName').value,document.getElementById('email').value,document.getElementById('username').value,document.getElementById('password').value);">
+<form>
 	<input type="text" id="fName" placeholder="First Name" required><br>
 	<input type="text" id="lName" placeholder="Last Name" required><br>
 	<input type="text" id="email" placeholder="Your Email" required><br>
 	<input type="text" id="username" placeholder="New Username" required><br>
 	<input type="password" id="password" placeholder"New Password" required><br>
-	<button type="submit">Register Now</button><br>
+	<button type="button" onclick="SendRegisterRequest(document.getElementById('fName').value,document.getElementById('lName').value,document.getElementById('email').value,document.getElementById('username').value,document.getElementById('password').value);">Register Now</button><br>
 	<a href="index.html">Login here</a>
 
 </form>

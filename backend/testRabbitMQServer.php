@@ -39,16 +39,24 @@ function doRegister($fName,$lName,$email,$username,$password)
     if ($mydb->connect_error){
             return array("status" => false, "message" => "Connection to Database failed"); }
 
-	$stmt = $mydb->prepare("SELECT username FROM users WHERE username = ?");
-	$stmt->bind_param("s", $username);
+	$stmt = $mydb->prepare("SELECT username, email FROM users WHERE username = ? OR email = ?");
+	$stmt->bind_param("ss", $username, $email);
 	$stmt->execute();
-	$stmt->store_result();
+//	$stmt->store_result();
+$stmt->bind_result($tempUser, $tempEmail);
 
-	if ($stmt->num_rows > 0) {
+//if ($stmt->num_rows > 0) {
+if ($stmt->fetch()) {
 		$stmt->close();
 		$mydb->close();
-		return array("status" => false, "message" => "Username is taken");
-	}
+		//return array("status" => false, "message" => "Username is taken, or email already in use");
+		if (strtolower($tempUser) === strtolower($username)) {
+		return array("status" => false, "message" => "Username is already taken");
+		}
+		else {
+		return array("status" => false, "message" => "Email already in use. Please Login");
+		}
+}
 	$stmt->close();
 
 	$hash = password_hash($password, PASSWORD_DEFAULT);
