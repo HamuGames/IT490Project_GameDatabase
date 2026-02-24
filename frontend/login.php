@@ -1,8 +1,10 @@
 <?php
+session_start();
 ini_set('display_errors', 0);
 ini_set('display_startup_errors', 0);
 error_reporting(E_ALL & ~E_DEPRECATED & ~E_NOTICE & ~E_WARNING);
 //error_reporting(E_ALL);
+
 require_once('../backend/rabbitMQLib.inc');
 
 if (!isset($_POST))
@@ -25,6 +27,13 @@ switch ($request["type"])
 		exit(0);
 		}
 		if (is_array($response)) {
+			if (isset($response['status']) && $response['status'] === true) {
+				$_SESSION['logged_in'] = true;
+				$_SESSION['username'] = $request['username'];
+			$_SESSION['session_key'] = $response['session_key'];	
+			}
+
+
 			echo json_encode($response);
 		} else {
 			echo $response;

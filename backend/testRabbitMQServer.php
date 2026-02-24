@@ -10,17 +10,32 @@ function doLogin($username,$password)
 
     if ($mydb->connect_error){
 	    return array("status" => false, "message" => "Connection to Database failed"); }
+    //SESSION
 
-    $stmt = $mydb->prepare("SELECT password FROM users WHERE username = ?");	
+    //SESSION
+    $stmt = $mydb->prepare("SELECT id, password FROM users WHERE username = ?");	
 $stmt->bind_param("s", $username);
 $stmt->execute();
-$result = $stmt->get_result();
+$stmt->store_result();
 
-if ($result->num_rows > 0) {
-	$row = $result->fetch_assoc();
-	$stored_hash = $row['password'];
+if ($stmt->num_rows > 0) {
+	//$row = $result->fetch_assoc();
+	//$stored_hash = $row['password'];
+	$stmt->bind_result($userid, $stored_hash);
+	$stmt->fetch();
+	$stmt->close();
+
 	if (password_verify($password, $stored_hash)) {
-	return array("status" => true, "message" => "LETS GOOOOOO");
+
+		$sessionKey = bin2hex(random_bytes(16));
+		$session=$mydb->prepare(" INSERT INTO sessions (userid, session_id) VALUES (?, ?) ON DUPLICATE KEY UPDATE session_id = ?, created_at = CURRENT_TIMESTAMP");
+$session->bind_param("iss", $userid, $sessionKey, $sessionKey);
+if (!$session->execute()){
+return array("status" => false, "message" => "Session Error: " . $mydb->error);
+}
+$session->close();
+$mydb->close();
+	return array("status" => true, "message" => "LETS GOOOOOO", "session_key" => $sessionKey);
 	}
 	else{
 	return array("status" => false, "message" => "Wrong Password");
