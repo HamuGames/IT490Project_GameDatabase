@@ -6,7 +6,7 @@ require_once('rabbitMQLib.inc');
 
 function doLogin($username,$password)
 {
- 	$mydb = new mysqli("127.0.0.1", "Hamu", "11301250", "IT490");	
+ 	$mydb = new mysqli("100.122.9.125", "Hamu", "11301250", "IT490");	
 //	$mydb = new mysqli("100.123.175.72", "AriUser", "11301250", "IT490");
 
     if ($mydb->connect_error){
@@ -50,7 +50,7 @@ $mydb->close();
 
 function doLogout($sessionKey) {
 
-        $mydb = new mysqli("127.0.0.1", "Hamu", "11301250", "IT490");
+        $mydb = new mysqli("100.122.9.125", "Hamu", "11301250", "IT490");
 //      $mydb = new mysqli("100.123.175.72", "AriUser", "11301250", "IT490");
 
 if ($mydb->connect_error){
@@ -70,7 +70,7 @@ if ($mydb->connect_error){
 
 function doRegister($fName,$lName,$email,$username,$password)
 {
-	$mydb = new mysqli("127.0.0.1", "Hamu", "11301250", "IT490");
+	$mydb = new mysqli("100.122.9.125", "Hamu", "11301250", "IT490");
 //	$mydb = new mysqli("100.123.175.72", "AriUser", "11301250", "IT490");
 
     if ($mydb->connect_error){

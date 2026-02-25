@@ -65,16 +65,32 @@ function SendLoginRequest(username,password)
           crossorigin="anonymous">
 <link href="css/main.css" rel="stylesheet">
 </head>
-<h1>login page</h1>
-<body>
+<body class="bg-light">
+<div class="container mt-5">
+<div class="row justify-content-center">
+<div class="col-md-4 card p-4 shadow-sm">
+<h2 class="text-center mb-4">login page</h2>
 <form>
-	<input type="text" id="user" placeholder="Username" required>
-	<input type="password" id="pass" placeholder"Password" required>
-	<button type="button" onclick="SendLoginRequest(document.getElementById('user').value,document.getElementById('pass').value);">Login</button><br>
-	<div id="textResponse">
+<div class="mb-3">
+	<label class=="form-label">UserName</label>
+	<input type="text" id="user" class="form-control"  placeholder="Username" required>
+</div>
+<div class="mb-3">
+	<label class=="form-label">Password</label>
+	<input type="password" id="pass" class="form-control" placeholder"Password" required>
+</div>
+<div class="d-grid gap-2">
+	<button class="btn btn-primary" type="button" onclick="SendLoginRequest(document.getElementById('user').value,document.getElementById('pass').value);">Login</button><br>
+</div>
+	<div class "alert alert-info text-center" id="textResponse">
 		 
 	</div>
+<div class="mt-3 text-center">
 	<a href="register.php">register here</a>
+</div>
 </form>
+</div>
+</div>
+</div>
 </body>
 </html>
