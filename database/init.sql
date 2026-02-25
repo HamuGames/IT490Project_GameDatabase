@@ -1,6 +1,6 @@
 -- MySQL dump 10.13  Distrib 8.0.45, for Linux (x86_64)
 --
--- Host: localhost    Database: IT490
+-- Host: localhost    Database: IT490DB
 -- ------------------------------------------------------
 -- Server version	8.0.45-0ubuntu0.24.04.1
 
