@@ -6,7 +6,7 @@ require_once('rabbitMQLib.inc');
 
 function doLogin($username,$password)
 {
- 	$mydb = new mysqli("10.0.0.1", "Hamu", "11301250", "IT490DB");	
+ 	$mydb = new mysqli("127.0.0.1", "Hamu", "11301250", "IT490");	
 //	$mydb = new mysqli("100.123.175.72", "AriUser", "11301250", "IT490");
 
     if ($mydb->connect_error){
@@ -48,9 +48,29 @@ $mydb->close();
 	$mydb->close();
 }
 
+function doLogout($sessionKey) {
+
+        $mydb = new mysqli("127.0.0.1", "Hamu", "11301250", "IT490");
+//      $mydb = new mysqli("100.123.175.72", "AriUser", "11301250", "IT490");
+
+if ($mydb->connect_error){
+            return array("status" => false, "message" => "Connection to Database failed"); }
+
+	$stmt = $mydb->prepare("DELETE FROM sessions WHERE session_id = ?");
+
+	if (!$stmt) {
+	return array("status" => false, "message" => "ERROR: " . $mydb->error);
+	}
+	$stmt->bind_param("s", $sessionKey);
+	$stmt->execute();
+	$stmt->close();
+	$mydb->close();
+	return array("status" => true, "message" => "Session terminated in Database");
+}
+
 function doRegister($fName,$lName,$email,$username,$password)
 {
-	$mydb = new mysqli("10.0.0.1", "Hamu", "11301250", "IT490DB");
+	$mydb = new mysqli("127.0.0.1", "Hamu", "11301250", "IT490");
 //	$mydb = new mysqli("100.123.175.72", "AriUser", "11301250", "IT490");
 
     if ($mydb->connect_error){
@@ -109,6 +129,8 @@ function requestProcessor($request)
 	    $test_hash = password_hash($request['password'], PASSWORD_DEFAULT);
 	    echo "Hashed: " .  $test_hash . PHP_EOL;
 	    return doRegister($request['fName'],$request['lName'],$request['email'],$request['username'],$request['password']);
+    case "logout":
+	    return doLogout($request['session_key']);
     case "validate_session":
 	    return doValidate($request['sessionId']); 
   }

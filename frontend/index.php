@@ -1,3 +1,10 @@
+<?php
+session_start();
+if (isset($_SESSION['logged_in']) && $_SESSION['logged_in'] === true) {
+	header("Location: HomePage.php");
+	exit(0);
+}
+?>
 <html>
 <script>
 
@@ -14,14 +21,18 @@ function HandleLoginResponse(response)
 {
     console.log("SERVER RAW RESPONSE:", response); 
     if (!response || response.trim() === "") {
-        alert("ERROR: The server sent back a completely empty response!");
+        alert("ERROR: The server sent empty response");
         return;
     }
 
     try {
         var text = JSON.parse(response);
-        alert("SUCCESS! MESSAGE: " + text.message);
-        document.getElementById("textResponse").innerHTML = text.message;
+        //alert("SUCCESS! MESSAGE: " + text.message);
+	    if (text.status === true) {
+		    window.location.href = "HomePage.php";}
+	    else {
+		    document.getElementById("textResponse").innerHTML = "<b style='color:red;'>" + text.message + "</b>";
+	    }
     } catch (e) {
         alert("CRASH! The server sent invalid JSON. Check the Console (F12) to see what it sent.");
         console.error("The invalid response was:", response);
@@ -40,9 +51,9 @@ function SendLoginRequest(username,password)
 			console.log("RESPONSE: ", this.responseText);
 			HandleLoginResponse(this.responseText);
 		}
-		else{
-			alert("Server error: " + this.status);
-		}
+	//	else{
+	//		alert("Server error: " + this.status);
+	//	}
 	}
 	request.send("type=login&username="+username+"&password="+password);
 }
@@ -56,14 +67,14 @@ function SendLoginRequest(username,password)
 </head>
 <h1>login page</h1>
 <body>
-<div id="textResponse">
-awaiting response
-</div>
 <form>
 	<input type="text" id="user" placeholder="Username" required>
 	<input type="password" id="pass" placeholder"Password" required>
 	<button type="button" onclick="SendLoginRequest(document.getElementById('user').value,document.getElementById('pass').value);">Login</button><br>
-	<a href="registration.html">register here</a>
+	<div id="textResponse">
+		 
+	</div>
+	<a href="register.php">register here</a>
 </form>
 </body>
 </html>

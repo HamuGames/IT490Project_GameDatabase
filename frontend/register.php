@@ -1,3 +1,10 @@
+<?php
+session_start();
+if (isset($_SESSION['logged_in']) && $_SESSION['logged_in'] === true) {
+        header("Location: HomePage.php");
+        exit(0);
+}
+?>
 <html>
 <script>
 
@@ -44,7 +51,7 @@ awaiting response
 	<input type="text" id="username" placeholder="New Username" required><br>
 	<input type="password" id="password" placeholder"New Password" required><br>
 	<button type="button" onclick="SendRegisterRequest(document.getElementById('fName').value,document.getElementById('lName').value,document.getElementById('email').value,document.getElementById('username').value,document.getElementById('password').value);">Register Now</button><br>
-	<a href="index.html">Login here</a>
+	<a href="index.php">Login here</a>
 
 </form>
 </body>
