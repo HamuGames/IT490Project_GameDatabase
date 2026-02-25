@@ -82,7 +82,7 @@ function SendLoginRequest(username,password)
 <div class="d-grid gap-2">
 	<button class="btn btn-primary" type="button" onclick="SendLoginRequest(document.getElementById('user').value,document.getElementById('pass').value);">Login</button><br>
 </div>
-	<div class "alert alert-info text-center" id="textResponse">
+	<div class="alert alert-info text-center" id="textResponse">
 		 
 	</div>
 <div class="mt-3 text-center">
