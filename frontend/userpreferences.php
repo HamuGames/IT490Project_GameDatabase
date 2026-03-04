@@ -1,9 +1,115 @@
-<?php
+<?p<?php
 session_start();
 
-// Redirect if not logged in
-if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
-    header("Location: index.php");
+if (!isset($_SESSION['logged_in'])) {
+	    header("Location: register.php");
+	        exit();
+}
+
+if (isset($_SESSION['console'])) {
+	    header("Location: HomePage.php");
+	        exit();
+}
+
+if ($_SERVER["REQUEST_METHOD"] == "POST") {
+
+	    $_SESSION['console'] = $_POST['console'];
+	        $_SESSION['games'] = $_POST['games'];
+	        $_SESSION['purpose'] = isset($_POST['purpose']) ? $_POST['purpose'] : [];
+
+		    header("Location: HomePage.php");
+		    exit();
+}
+?>
+
+<!DOCTYPE html>
+<html>
+<head>
+<title>User Preferences</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="bg-dark text-white">
+
+<div class="container mt-5">
+<div class="row justify-content-center">
+<div class="col-md-6">
+<div class="card bg-secondary">
+<div class="card-body">
+
+<h3 class="text-center">Welcome, <?php echo $_SESSION['username']; ?>!</h3>
+<p class="text-center">Set Your Gaming Preferences</p>
+
+<form method="POST">
+
+<div class="mb-3">
+<label class="form-label">What console(s) do you own?</label>
+<input type="text" name="console" class="form-control" required>
+</div>
+
+<div class="mb-3">
+<label class="form-label">What games do you play?</label>
+<textarea name="games" class="form-control" rows="3" required></textarea>
+</div>
+
+<div class="mb-3">
+<label class="form-label">What are you using this website for?</label><br>
+
+<div class="form-check">
+<input class="form-check-input" type="checkbox" name="purpose[]" value="Regular Gamer Preferences">
+<label class="form-check-label">Regular Gamer Preferences</label>
+</div>
+
+<div class="form-check">
+<input class="form-check-input" type="checkbox" name="purpose[]" value="Gamer Recommendations">
+<label class="form-check-label">Gamer Recommendations</label>
+</div>
+
+<div class="form-check">
+<input class="form-check-input" type="checkbox" name="purpose[]" value="Content Creation">
+<label class="form-check-label">Content Creation</label>
+</div>
+
+<div class="form-check">
+<input class="form-check-input" type="checkbox" name="purpose[]" value="Just for Curiosity">
+<label class="form-check-label">Just for Curiosity</label>
+</div>
+
+</div>
+
+<div class="d-grid">
+<button class="btn btn-success">Continue to Homepage</button>
+</div>
+
+</form>
+
+</div>
+</div>
+</div>
+</div>
+</div>
+
+</body>
+</html>
+session_
+session_start();
+
+if (!isset($_SESSION['logged_in'])) {
+    header("Location: register.php");
+    exit();
+}
+
+if (isset($_SESSION['console'])) {
+    header("Location: HomePage.php");
+    exit();
+}
+
+if ($_SERVER["REQUEST_METHOD"] == "POST") {
+
+    $_SESSION['console'] = $_POST['console'];
+    $_SESSION['games'] = $_POST['games'];
+    $_SESSION['purpose'] = isset($_POST['purpose']) ? $_POST['purpose'] : [];
+
+    header("Location: HomePage.php");
     exit();
 }
 ?>
@@ -11,76 +117,145 @@ if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
 <!DOCTYPE html>
 <html>
 <head>
-    <title>User Preferences</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            background-color: #111;
-            color: white;
-            text-align: center;
-        }
-        .container {
-            width: 50%;
-            margin: auto;
-            margin-top: 50px;
-            padding: 20px;
-            background-color: #222;
-            border-radius: 10px;
-        }
-        input, textarea {
-            width: 80%;
-            padding: 8px;
-            margin: 8px 0;
-            border-radius: 5px;
-            border: none;
-        }
-        .checkbox-group {
-            text-align: left;
-            margin-left: 10%;
-        }
-        button {
-            padding: 10px 20px;
-            border: none;
-            background-color: #28a745;
-            color: white;
-            font-size: 16px;
-            border-radius: 5px;
-            cursor: pointer;
-        }
-        button:hover {
-            background-color: #218838;
-        }
-    </style>
+<title>User Preferences</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
+<body class="bg-dark text-white">
 
-<body>
+<div class="container mt-5">
+<div class="row justify-content-center">
+<div class="col-md-6">
+<div class="card bg-secondary">
+<div class="card-body">
 
-<div class="container">
-    <h2>Welcome, <?php echo $_SESSION['username']; ?>!</h2>
-    <h3>Set Your Gaming Preferences</h3>
+<h3 class="text-center">Welcome, <?php echo $_SESSION['username']; ?>!</h3>
+<p class="text-center">Set Your Gaming Preferences</p>
 
-    <form method="POST" action="SavePreferences.php">
+<form method="POST">
+<div class="mb-3">
+<label class="form-label">What console(s) do you own?</label>
+<input type="text" name="console" class="form-control" required>
+</div>
 
-        <!-- Console -->
-        <label><b>What console(s) do you own?</b></label><br>
-        <input type="text" name="console" placeholder="Example: PS5, Xbox Series X, PC"><br>
+<div class="mb-3">
+<label class="form-label">What games do you play?</label>
+<textarea name="games" class="form-control" rows="3" required></textarea>
+</div>
 
-        <!-- Games -->
-        <label><b>What games do you play?</b></label><br>
-        <textarea name="games" rows="3" placeholder="Example: Call of Duty, Fortnite, Elden Ring"></textarea><br>
+<div class="mb-3">
+<label class="form-label">What are you using this website for?</label><br>
 
-        <!-- Website Purpose -->
-        <label><b>What are you using this website for?</b></label><br>
-        <div class="checkbox-group">
-            <input type="checkbox" name="purpose[]" value="Regular Gamer Preferences"> Regular Gamer Preferences<br>
-            <input type="checkbox" name="purpose[]" value="Gamer Recommendations"> Gamer Recommendations<br>
-            <input type="checkbox" name="purpose[]" value="Content Creation"> Content Creation<br>
-            <input type="checkbox" name="purpose[]" value="Just for Curiosity"> Just for Curiosity<br>
-        </div>
+<div class="form-check">
+<input class="form-check-input" type="checkbox" name="purpose[]" value="Regular Gamer Preferences">
+<label class="form-check-label">Regular Gamer Preferences</label>
+</div>
 
-        <br>
-        <button type="submit">Save Preferences</button>
-    </form>
+<div class="form-check">
+<input class="form-check-input" type="checkbox" name="purpose[]" value="Gamer Recommendations">
+<label class="form-check-label">Gamer Recommendations</label>
+</div>
+
+<div class="form-check">
+<input class="form-check-input" type="checkbox" name="purpose[]" value="Content Creation">
+<label class="form-check-label">Content Creation</label>
+</div>
+
+<div class="form-check">
+<input class="form-check-input" type="checkbox" name="purpose[]" value="Just for Curiosity">
+<label class="form-check-label">Just for Curiosity</label>
+</div>
+
+</div>
+
+<div class="d-grid">
+<button class="btn btn-success">Continue t<?php
+session_start();
+
+if (!isset($_SESSION['logged_in'])) {
+	    header("Location: register.php");
+	        exit();
+}
+
+if (isset($_SESSION['console'])) {
+	    header("Location: HomePage.php");
+	        exit();
+}
+
+if ($_SERVER["REQUEST_METHOD"] == "POST") {
+
+	    $_SESSION['console'] = $_POST['console'];
+	        $_SESSION['games'] = $_POST['games'];
+	        $_SESSION['purpose'] = isset($_POST['purpose']) ? $_POST['purpose'] : [];
+
+		    header("Location: HomePage.php");
+		    exit();
+}
+?>
+
+<!DOCTYPE html>
+<html>
+<head>
+<title>User Preferences</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="bg-dark text-white">
+
+<div class="container mt-5">
+<div class="row justify-content-center">
+<div class="col-md-6">
+<div class="card bg-secondary">
+<div class="card-body">
+
+<h3 class="text-center">Welcome, <?php echo $_SESSION['username']; ?>!</h3>
+<p class="text-center">Set Your Gaming Preferences</p>
+
+<form method="POST">
+
+<div class="mb-3">
+<label class="form-label">What console(s) do you own?</label>
+<input type="text" name="console" class="form-control" required>
+</div>
+
+<div class="mb-3">
+<label class="form-label">What games do you play?</label>
+<textarea name="games" class="form-control" rows="3" required></textarea>
+</div>
+
+<div class="mb-3">
+<label class="form-label">What are you using this website for?</label><br>
+
+<div class="form-check">
+<input class="form-check-input" type="checkbox" name="purpose[]" value="Regular Gamer Preferences">
+<label class="form-check-label">Regular Gamer Preferences</label>
+</div>
+
+<div class="form-check">
+<input class="form-check-input" type="checkbox" name="purpose[]" value="Gamer Recommendations">
+<label class="form-check-label">Gamer Recommendations</label>
+</div>
+
+<div class="form-check">
+<input class="form-check-input" type="checkbox" name="purpose[]" value="Content Creation">
+<label class="form-check-label">Content Creation</label>
+</div>
+
+<div class="form-check">
+<input class="form-check-input" type="checkbox" name="purpose[]" value="Just for Curiosity">
+<label class="form-check-label">Just for Curiosity</label>
+</div>
+
+</div>
+
+<div class="d-grid">
+<button class="btn btn-success">Continue to Homepage</button>
+</div>
+
+</form>
+
+</div>
+</div>
+</div>
+</div>
 </div>
 
 </body>
