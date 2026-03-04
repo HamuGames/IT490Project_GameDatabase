@@ -61,7 +61,7 @@ if (isset($_SESSION['purpose'])) {
 
 <div class="d-grid gap-2">
 <a href="logout.php" class="btn btn-danger">
-Logout
+
 </a>
 </div>
 
