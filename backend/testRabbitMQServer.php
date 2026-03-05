@@ -3,6 +3,15 @@
 require_once('path.inc');
 require_once('get_host_info.inc');
 require_once('rabbitMQLib.inc');
+require_once('config.php');
+require_once('igdbHarvester.php');
+
+//try {
+//    $pdo = new PDO("mysql:host=$db_host;dbname=$db_name;charset=utf8mb4", $db_user, $db_pass);
+//    $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+//} catch (PDOException $e) {
+//    die("ERROR: Could not connect to database. " . $e->getMessage());
+//}
 
 function doLogin($username,$password)
 {
@@ -132,7 +141,31 @@ function requestProcessor($request)
     case "logout":
 	    return doLogout($request['session_key']);
     case "validate_session":
-	    return doValidate($request['sessionId']); 
+	    return doValidate($request['sessionId']);
+    case "search_games":
+	    $searchTerm = $request['query'];
+	    $stmt = $pdo->prepare("SELECT gameId as id, title as name, summary, cover_url as cover_image, rating FROM games WHERE title LIKE ?");
+	    $stmt->execute(["%$searchTerm%"]);
+	    $local_results = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+	    if (!empty($local_results)) {
+	    return array("returnCode" => '1', 'message' => "Loaded from local DB", 'data' => $local_results);
+	    }
+
+	    global $client_id, $client_secret, $pdo;
+	    $token = getIGDBToken($client_id, $client_secret);
+if (!$token) {
+        return array("returnCode" => '0', 'message' => "API Auth Failed");
+    }
+
+    $api_results = harvestGameData($searchTerm, $pdo, $client_id, $token);
+
+    // 4. Return the freshly harvested data
+    if (!empty($api_results)) {
+        return array("returnCode" => '1', 'message' => "Harvested from IGDB", 'data' => $api_results);
+    } else {
+        return array("returnCode" => '0', 'message' => "Game not found anywhere");
+    }
   }
   return array("returnCode" => '0', 'message'=>"Server received request and processed");
 }
