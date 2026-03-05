@@ -61,6 +61,17 @@ CREATE TABLE `users` (
 ) ENGINE=InnoDB AUTO_INCREMENT=12 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
+DROP TABLE IF EXISTS `games`;
+CREATE TABLE `games` (
+	`gameId` int NOT NULL,
+	`title` varchar(255) NOT NULL,
+	`summary` text  NULL,
+	`cover_url` varchar(255) NULL,
+       	`rating` decimal(5,2) NULL,
+	`release_date` date NULL,
+	PRIMARY KEY (`gameId`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
 --
 -- Dumping data for table `users`
 --
