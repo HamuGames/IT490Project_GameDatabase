@@ -1,4 +1,5 @@
 <?php
+session_start();
 ini_set('display_errors', 0);
 ini_set('display_startup_errors', 0);
 error_reporting(E_ALL & ~E_DEPRECATED & ~E_NOTICE & ~E_WARNING);
@@ -20,10 +21,22 @@ switch ($request["type"])
 {
 	case "register":
 		$response = $client->send_request($request);
-	break;
+		if (is_array)($response) && isset($response['status']) && $response['status'] === true) {
+			$_SESSION['logged_in'] = true;
+			$_SESSION['username'] = $request['username'];
+			$_SESSION['session_key'] = $response['session_key'];
+			$_SESSION['new_registation'] = true;
+
+			echo json_encode([
+				'status' => true,
+				'message' => 'Registration successful!',
+				'redirect' => 'preferences.php'
+			]);
+			exit(0);
+		}
+		break;
 }
 echo json_encode($response);
 exit(0);
-
 ?>
 
