@@ -28,17 +28,28 @@ crossorigin="anonymous">
 
 function HandleRegisterResponse(response)
 {
-    document.getElementById("textResponse").innerHTML = response;
+    console.log("SERVER RAW RESPONSE:', response);
 
-    // Redirect to user preferences if registration succeeds
-    if(response.toLowerCase().includes("success") || response.toLowerCase().includes("registered"))
-    {
-        setTimeout(function(){
-            window.location.href = "userpreferences.php";
-        },1000);
+    if(!response || response.trim() === '') {
+	    alert("ERROR: The server sent empty response');
+	    return;
+    }
+    try {
+	    var text = JSON.parse(response);
+	    document.getElementById("testResponse').innerHTML = text.message;
+
+	    if (text.status === true) {
+		    if (text.direct) {
+			    window.location.href = text.redirect;
+		    } else {
+			    window.location.href = "HomePage.php";
+		    }
+	    }
+    } catch (e) {
+	    alert("CRASH! The server sent invalid JSON. Check the Console (F12) to see what it sent.");
+	    console.error("The invalid response was:", response);
     }
 }
-
 
 function SendRegisterRequest(fName,lName,email,username,password)
 {
