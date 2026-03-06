@@ -1,46 +1,9 @@
-<?php
-session_start();
-if (isset($_SESSION['logged_in']) && $_SESSION['logged_in'] === true) {
-        header("Location: HomePage.php");
-        exit(0);
-}
-?>
-<!DOcTYPE html>
+<!DOCTYPE html>
 <html>
-<script>
-
-function HandleRegisterResponse(response)
-{
-	console.log("SERVER:", response);
-//	document.getElementById("textResponse").innerHTML = response+"<p>";	
-//	document.getElementById("textResponse").innerHTML = "response: "+text+"<p>";
-	document.getElementById("textResponse").innerHTML = response + "<p>";
-}
-
-function SendRegisterRequest(fName,lName,email,username,password)
-{
-	var request = new XMLHttpRequest();
-
-	request.open("POST","registration.php",true);
-	request.setRequestHeader("Content-Type","application/x-www-form-urlencoded");
-	request.onreadystatechange = function ()
-	{
-		if ((this.readyState == 4) && (this.status == 200))
-		{
-			HandleRegisterResponse(this.responseText);
-		}		
-	}
-
-	request.send("type=register&fName="+fName+
-		"&lName="+lName+
-		"&email="+email+
-		"&username="+username+
-		"&password="+password);
-}
-
-</script>
 
 <head>
+
+<title>Register</title>
 
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css"
 rel="stylesheet"
@@ -49,9 +12,55 @@ crossorigin="anonymous">
 
 <link href="css/main.css" rel="stylesheet">
 
+<script>
+
+function HandleRegisterResponse(response)
+{
+    document.getElementById("textResponse").innerHTML = response;
+
+    // Redirect to user preferences if registration succeeds
+    if(response.toLowerCase().includes("success") || response.toLowerCase().includes("registered"))
+    {
+        setTimeout(function(){
+            window.location.href = "userpreferences.php";
+        },1000);
+    }
+}
+
+
+function SendRegisterRequest(fName,lName,email,username,password)
+{
+    var request = new XMLHttpRequest();
+
+    request.open("POST","registration.php",true);
+
+    request.setRequestHeader("Content-Type","application/x-www-form-urlencoded");
+
+    request.onreadystatechange = function ()
+    {
+        if ((this.readyState == 4) && (this.status == 200))
+        {
+            HandleRegisterResponse(this.responseText);
+        }
+    }
+
+    request.send(
+        "type=register"
+        +"&fName="+encodeURIComponent(fName)
+        +"&lName="+encodeURIComponent(lName)
+        +"&email="+encodeURIComponent(email)
+        +"&username="+encodeURIComponent(username)
+        +"&password="+encodeURIComponent(password)
+    );
+}
+
+</script>
+
 </head>
 
+
 <body class="bg-light">
+
 
 <div class="container mt-5">
 <div class="row justify-content-center">
@@ -81,9 +90,11 @@ crossorigin="anonymous">
 
 </div>
 
+
 <div class="d-grid gap-2">
 
 <button class="btn btn-primary" type="button"
+
 onclick="SendRegisterRequest(
 document.getElementById('fName').value,
 document.getElementById('lName').value,
@@ -98,8 +109,10 @@ Register Now
 
 </div>
 
+
 <div class="alert alert-info text-center" id="textResponse">
 </div>
+
 
 <div class="mt-3 text-center">
 <a href="index.php">Login here</a>
