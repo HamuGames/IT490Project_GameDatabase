@@ -164,10 +164,34 @@ if (!$token) {
     $api_results = harvestGameData($searchTerm, $pdo, $client_id, $token);
 
     if (!empty($api_results)) {
-        return array("returnCode" => '1', 'message' => "Harvested from IGDB", 'data' => $api_results);
+	    $format = [];
+	    foreach ($api_results as $r) {
+		    $format[] = [
+			    'id' => $r['id'],
+			    'name' => $r['name'],
+			    'summary' => $r['summary'] ?? "",
+			    'cover_image' => $r['cover']['image_id'] ?? null,
+			    'rating' => $r['rating'] ??null
+		    ];
+	    }
+        return array("returnCode" => '1', 'message' => "Harvested from IGDB", 'data' => $format);
     } else {
         return array("returnCode" => '0', 'message' => "Game not found anywhere");
     }
+    case "get_game_details":
+	    global $pdo;
+	    $gameId = $request['game_id'];
+
+	    $stmt = $pdo->prepare("SELECT * FROM games WHERE gameId = ?");
+	    $stmt->execute([$gameId]);
+	    $data = $stmt->fetch(PDO::FETCH_ASSOC);
+
+	    if ($data) {
+		    return array("returnCode" => '1', 'message' => "Data harvesting successful", 'data' => $data);
+	    }
+	    else {
+	    return array("returnCode" => '0', 'message' => "Game not Found");
+	    }
   }
   return array("returnCode" => '0', 'message'=>"Server received request and processed");
 }

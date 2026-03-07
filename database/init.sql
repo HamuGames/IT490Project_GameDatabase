@@ -136,6 +136,24 @@ CREATE TABLE `reviews` (
 	FOREIGN KEY (`game_id`) REFERENCES `games`(`gameId`) ON DELETE CASCADE) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 
+INSERT IGNORE INTO platforms (platformId, name) VALUES
+(3, 'Linux'), (6, 'PC (Microsoft Windows)'), (7, 'PlayStation'),
+(8, 'PlayStation 2'), (9, 'PlayStation 3'), (11, 'Xbox'),
+(12, 'Xbox 360'), (13, 'PC (DOS)'), (14, 'Mac'),
+(18, 'Nintendo Entertainment System (NES)'), (19, 'Super Nintendo Entertainment System (SNES)'),
+(34, 'Android'), (39, 'iOS'), (48, 'PlayStation 4'),
+(49, 'Xbox One'), (130, 'Nintendo Switch'), (167, 'PlayStation 5'),
+(169, 'Xbox Series X|S');
+
+
+INSERT IGNORE INTO genres (genreId, name) VALUES
+(2, 'Point-and-click'), (4, 'Fighting'), (5, 'Shooter'),
+(7, 'Music'), (8, 'Platform'), (9, 'Puzzle'),
+(10, 'Racing'), (11, 'Real Time Strategy (RTS)'), (12, 'Role-playing (RPG)'),
+(13, 'Simulator'), (14, 'Sport'), (15, 'Strategy'),
+(16, 'Turn-based strategy (TBS)'), (24, 'Tactical'), (25, 'Hack and slash/Beat em up'),
+(26, 'Quiz/Trivia'), (31, 'Adventure'), (32, 'Indie'),
+(33, 'Arcade'), (34, 'Visual Novel'), (35, 'Card & Board Game'), (36, 'MOBA');
 --
 -- Dumping data for table `users`
 --

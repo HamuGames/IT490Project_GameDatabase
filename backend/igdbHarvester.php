@@ -18,7 +18,7 @@ function getIGDBToken($client_id, $client_secret) {
 
 function harvestGameData($search_query, $pdo, $client_id, $access_token) {
 
-	$query = 'fields id, name, summary, cover.image_id, rating, first_release_date; search "' . $search_query . '"; where cover != null; limit 5;';
+	$query = 'fields id, name, summary, cover.image_id, rating, first_release_date, genres, platforms; search "' . $search_query . '"; where cover != null; limit 5;';
 
 	$ch = curl_init('https://api.igdb.com/v4/games');
 	curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
@@ -35,12 +35,12 @@ function harvestGameData($search_query, $pdo, $client_id, $access_token) {
 	$games = json_decode($games_json, true);
 
 	if (empty($games)) return [];
-
-	$stmt = $pdo->prepare("
-INSERT IGNORE INTO games (gameId, title, summary, cover_url, rating, release_date)
+	$stmt = $pdo->prepare("INSERT IGNORE INTO games (gameId, title, summary, cover_url, rating, release_date)
 VALUES (?, ?, ?, ?, ?, FROM_UNIXTIME(?))
 ");
-
+	$genremap = $pdo->prepare("INSERT IGNORE INTO game_genres (game_id, genre_id) VALUES (?, ?)");
+	$platformmap = $pdo->prepare("INSERT IGNORE INTO game_platforms (game_id, platform_id) VALUES (?, ?)");
+	
 foreach ($games as $game) {
 	$stmt->execute([
 	$game['id'],
@@ -50,6 +50,15 @@ foreach ($games as $game) {
         $game['rating'] ?? null,
         $game['first_release_date'] ?? null
         ]);
+	if (isset($game['genres']) && is_array($game['genres'])) {
+		foreach ($game['genres'] as $genreId) {			$genremap->execute([$game['id'], $genreId]);
+		}
+	}
+if (isset($game['platforms']) && is_array($game['platforms'])) {
+                foreach ($game['platforms'] as $platformId) {
+             $platformmap->execute([$game['id'], $platformId]);
+                }
+        }
 }
 return $games;
 }
