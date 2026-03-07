@@ -72,6 +72,70 @@ CREATE TABLE `games` (
 	PRIMARY KEY (`gameId`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
+
+
+DROP TABLE IF EXISTS `platforms`;
+CREATE TABLE `platforms` (
+	`platformId` int NOT NULL,
+	`name` varchar(100) NOT NULL,
+	PRIMARY KEY (`platformId`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+DROP TABLE IF EXISTS `genres`;
+CREATE TABLE `genres` (
+	`genreId` int NOT NULL,
+	`name` varchar(100) NOT NULL,
+	PRIMARY KEY (`genreId`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+DROP TABLE IF EXISTS `game_platforms`;
+CREATE TABLE `game_platforms` (
+	`game_id` int NOT NULL,
+	`platform_id` int NOT NULL, 
+	PRIMARY KEY (`game_id`, `platform_id`),
+	FOREIGN KEY (`game_id`) REFERENCES `games`(`gameId`) ON DELETE CASCADE,
+	FOREIGN KEY (`platform_id`) REFERENCES `platforms`(`platformId`) ON DELETE CASCADE) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+
+DROP TABLE IF EXISTS `game_genres`;
+CREATE TABLE `game_genres` (
+	`game_id` int NOT NULL,
+	`genre_id` int NOT NULL,
+	PRIMARY KEY (`game_id`, `genre_id`),
+	FOREIGN KEY (`game_id`) REFERENCES `games`(`gameId`) ON DELETE CASCADE,
+	FOREIGN KEY (`genre_id`) REFERENCES `genres`(`genreId`) ON DELETE CASCADE) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+DROP TABLE IF EXISTS `user_platforms`;
+CREATE TABLE `user_platforms` (
+	`user_id` int NOT NULL,
+	`platform_id` int NOT NULL,
+	PRIMARY KEY (`user_id`, `platform_id`),
+	FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON DELETE CASCADE,
+	FOREIGN KEY (`platform_id`) REFERENCES `platforms`(`platformId`) ON DELETE CASCADE) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4; 
+
+DROP TABLE IF EXISTS `user_library`;
+CREATE TABLE `user_library` (
+	`id` int NOT NULL AUTO_INCREMENT,
+	`user_id` int NOT NULL,
+	`game_id` int NOT NULL,
+	`status` enum('watchlist', 'playing', 'completed', 'dropped') DEFAULT 'watchlist',
+	PRIMARY KEY (`id`),
+	FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON DELETE CASCADE,
+	FOREIGN KEY (`game_id`) REFERENCES `games`(`gameId`) ON DELETE CASCADE) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+DROP TABLE IF EXISTS `reviews`;
+CREATE TABLE `reviews` (
+	`id` int NOT NULL AUTO_INCREMENT,
+	`user_id` int NOT NULL,
+	`game_id` int NOT NULL,
+	`rating` int CHECK (rating BETWEEN 1 AND 10),
+	`comment` text,
+	`created_at` timestamp DEFAULT CURRENT_TIMESTAMP,
+	PRIMARY KEY (`id`),
+	FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON DELETE CASCADE,
+	FOREIGN KEY (`game_id`) REFERENCES `games`(`gameId`) ON DELETE CASCADE) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+
 --
 -- Dumping data for table `users`
 --
