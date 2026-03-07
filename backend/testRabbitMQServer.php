@@ -192,8 +192,57 @@ if (!$token) {
 	    else {
 	    return array("returnCode" => '0', 'message' => "Game not Found");
 	    }
+case "addToLibrary":
+	global $pdo;
+	$sessionKey = $request['session_key'];
+	$gameId = $request['game_id'];
+	$status = $request['status'];
+
+	$getUser = $pdo->prepare("SELECT userid FROM sessions WHERE session_id = ?");
+	$getUser->execute([$sessionKey]);
+	$userR = $getUser->fetch(PDO::FETCH_ASSOC);
+	if (!$userR) {
+	return array("returnCode" => '0', 'message' => "Login again please");
+	}
+
+	$userId = $userR['userid'];
+
+	$check = $pdo->prepare("SELECT id FROM user_library WHERE user_id = ? AND game_id = ?");
+	$check->execute([$userId, $gameId]);
+
+	if ($check->rowCount() > 0) {
+		$update = $pdo->prepare("UPDATE user_library SET status = ? WHERE user_id = ? AND game_id = ?");
+	if ($update->execute([$status, $userId, $gameId])) {
+		return array("returnCode" => '1', 'message' => "Library Updated!");
+	}
+	}
+	else {
+		$insert = $pdo->prepare("INSERT INTO user_library (user_id, game_id, status) VALUES (?, ?, ?)");
+		if ($insert->execute([$userId, $gameId, $status])) {
+		return array ("returnCode" => '1', 'message' => "Added to your library!");
+		}
+	}
+	return array("returnCode" => '0', 'message' => "Error While updating library.(DB)");
+
+case "get_user_library":
+	global $pdo;
+	$sessionKey = $request['session_key'];
+
+	$stmt = $pdo->prepare("SELECT g.gameId, g.title, g.cover_url, l.status FROM user_library l JOIN games g ON l.game_id = g.gameId JOIN sessions s ON l.user_id = s.userid WHERE s.session_id = ? ");
+	$stmt->execute([$sessionKey]);
+	$userGames = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+	if ($userGames) {
+		return array("returnCode" => '1', 'message' => "Library pulled! ", 'data' => $userGames);
+	}
+	else {
+	return array("returnCode" => '0', 'message' => "Library is Empty! ");
+	}
+
+//end of switch	
   }
   return array("returnCode" => '0', 'message'=>"Server received request and processed");
+
 }
 
 $server = new rabbitMQServer("testRabbitMQ.ini","testServer");

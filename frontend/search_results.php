@@ -1,7 +1,28 @@
 <?php
 session_start();
-$games = $_SESSION['search_results'] ?? [];
-$error = $_SESSION['search_error'] ?? "";
+require_once('../backend/path.inc');
+require_once('../backend/get_host_info.inc');
+require_once('../backend/rabbitMQLib.inc');
+
+$query = $_REQUEST['search_query'] ?? "";
+$games = [];
+$error = "";
+
+if (!empty($query)) {
+	$client = new rabbitMQClient("../backend/testRabbitMQ.ini", "testServer");
+    $request = [
+        'type' => "search_games",
+        'query' => $query
+    ];
+
+    $response = $client->send_request($request);
+
+    if (isset($response['returnCode']) && $response['returnCode'] == '1') {
+        $games = $response['data'];
+    } else {
+        $error = $response['message'] ?? "No games found for '" . htmlspecialchars($query) . "'";
+    }
+}
 ?>
 
 <!DOCTYPE html>
@@ -13,11 +34,7 @@ $error = $_SESSION['search_error'] ?? "";
 </head>
 <body class="bg-light">
 
-<nav class="navbar navbar-light bg-white shadow-sm mb-4">
-<div class="container">
-	<a class="navbar-brand" href="HomePage.php">Game Dungeon</a>
-</div>
-</nav>
+<?php include('navBar.php'); ?>
 <div class="row g-4">
 	<?php if (!empty($games)) : ?>
 <?php foreach ($games as $game): ?>
