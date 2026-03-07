@@ -6,17 +6,18 @@ require_once('rabbitMQLib.inc');
 require_once('config.php');
 require_once('igdbHarvester.php');
 
-//try {
-//    $pdo = new PDO("mysql:host=$db_host;dbname=$db_name;charset=utf8mb4", $db_user, $db_pass);
-//    $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-//} catch (PDOException $e) {
-//    die("ERROR: Could not connect to database. " . $e->getMessage());
-//}
+try {
+    $pdo = new PDO("mysql:host=$db_host;dbname=$db_name;charset=utf8mb4", $db_user, $db_pass);
+    $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+} catch (PDOException $e) {
+    die("ERROR: Could not connect to database. " . $e->getMessage());
+}
 
 function doLogin($username,$password)
 {
- //	$mydb = new mysqli("100.122.9.125", "Hamu", "11301250", "IT490");	
-	$mydb = new mysqli("100.123.175.72", "AriUser", "11301250", "IT490");
+	global $db_host, $db_user, $db_pass, $db_name;
+
+	$mydb = new mysqli($db_host, $db_user, $db_pass, $db_name);	
 
     if ($mydb->connect_error){
 	    return array("status" => false, "message" => "Connection to Database failed"); }
@@ -59,8 +60,9 @@ $mydb->close();
 
 function doLogout($sessionKey) {
 
-//        $mydb = new mysqli("100.122.9.125", "Hamu", "11301250", "IT490");
-      $mydb = new mysqli("100.123.175.72", "AriUser", "11301250", "IT490");
+	global $db_host, $db_user, $db_pass, $db_name;
+
+        $mydb = new mysqli($db_host, $db_user, $db_pass, $db_name);
 
 if ($mydb->connect_error){
             return array("status" => false, "message" => "Connection to Database failed"); }
@@ -79,8 +81,9 @@ if ($mydb->connect_error){
 
 function doRegister($fName,$lName,$email,$username,$password)
 {
-//	$mydb = new mysqli("100.122.9.125", "Hamu", "11301250", "IT490");
-	$mydb = new mysqli("100.123.175.72", "AriUser", "11301250", "IT490");
+global $db_host, $db_user, $db_pass, $db_name;
+
+        $mydb = new mysqli($db_host, $db_user, $db_pass, $db_name);
 
     if ($mydb->connect_error){
             return array("status" => false, "message" => "Connection to Database failed"); }
@@ -124,6 +127,7 @@ if ($stmt->fetch()) {
 
 function requestProcessor($request)
 {
+	global $pdo, $client_id, $client_secret;
   echo "received request".PHP_EOL;
   var_dump($request);
   if(!isset($request['type']))
@@ -152,7 +156,6 @@ function requestProcessor($request)
 	    return array("returnCode" => '1', 'message' => "Loaded from local DB", 'data' => $local_results);
 	    }
 
-	    global $client_id, $client_secret, $pdo;
 	    $token = getIGDBToken($client_id, $client_secret);
 if (!$token) {
         return array("returnCode" => '0', 'message' => "API Auth Failed");
