@@ -163,7 +163,6 @@ if (!$token) {
 
     $api_results = harvestGameData($searchTerm, $pdo, $client_id, $token);
 
-    // 4. Return the freshly harvested data
     if (!empty($api_results)) {
         return array("returnCode" => '1', 'message' => "Harvested from IGDB", 'data' => $api_results);
     } else {
