@@ -18,7 +18,7 @@ function getIGDBToken($client_id, $client_secret) {
 
 function harvestGameData($search_query, $pdo, $client_id, $access_token) {
 
-	$query = 'fields id, name, summary, cover.image_id, rating, first_release_date, genres, platforms; search "' . $search_query . '"; where cover != null; limit 5;';
+	$query = 'fields id, name, summary, cover.image_id, rating, first_release_date, genres, platforms; search "' . $search_query . '"; where cover != null; limit 10;';
 
 	$ch = curl_init('https://api.igdb.com/v4/games');
 	curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);

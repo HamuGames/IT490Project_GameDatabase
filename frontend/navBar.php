@@ -8,7 +8,10 @@
       <ul class="navbar-nav me-auto">
         <li class="nav-item">
           <a class="nav-link fs-5" href="myLibrary.php">My Library</a>
-        </li>
+	</li>
+<li class="nav-item">
+ <a class="nav-link fs-5 text-warning" href="preferences.php">⚙️ settings</a>
+</li>
       </ul>
       
       <form class="d-flex" action="search_results.php" method="GET">

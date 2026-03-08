@@ -113,6 +113,15 @@ CREATE TABLE `user_platforms` (
 	FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON DELETE CASCADE,
 	FOREIGN KEY (`platform_id`) REFERENCES `platforms`(`platformId`) ON DELETE CASCADE) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4; 
 
+DROP TABLE IF EXISTS `user_genres`;
+CREATE TABLE `user_genres` (
+        `user_id` int NOT NULL,
+        `genre_id` int NOT NULL,
+        PRIMARY KEY (`user_id`, `genre_id`),
+        FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON DELETE CASCADE,
+        FOREIGN KEY (`genre_id`) REFERENCES `genres`(`genreId`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
 DROP TABLE IF EXISTS `user_library`;
 CREATE TABLE `user_library` (
 	`id` int NOT NULL AUTO_INCREMENT,
