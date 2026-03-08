@@ -6,6 +6,10 @@ if (!isset($_SESSION['logged_in']) && $_SESSION['logged_in'] !== true) {
         exit(0);
 -->
 }
+$sql=$db->prepare('SELECT * FROM mytable WHERE category=:category');
+$sql->execute(array(':category'=>$_REQUEST[searchcategory]));
+while ($row=$sql->fetch()) {
+}
 ?>
 <!DOCTYPE html>
 
@@ -21,7 +25,7 @@ if (!isset($_SESSION['logged_in']) && $_SESSION['logged_in'] !== true) {
 	<p class="lead">This is the HomePage! </p>
 
 	<form>
-		<input type="text" placeholder="Search Games...">
+		<input type="text" name="searchcategory"> placeholder="Search Games...">
 		<button>
 			Search
 		</button>
