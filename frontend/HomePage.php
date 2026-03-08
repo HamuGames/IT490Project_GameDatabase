@@ -15,11 +15,17 @@ if (!isset($_SESSION['logged_in']) && $_SESSION['logged_in'] !== true) {
 <body class="bg-light">
 	<div class="container mt-5">
 		<h1 class="display-4">Welcome, <?php echo htmlspecialchars($_SESSION['username']); ?>!</h1>
-<hr>
-<p class="lead">This is the HomePage! </p>
+	<hr>
+	<p class="lead">This is the HomePage! </p>
 
-<a href="logout.php" class="btn btn-danger mt-3">Logout</a>
-</div>
+	<form>
+		<input type="text" placeholder="Search Games...">
+		<button>
+			Search
+		</button>
+	</form>
+	<a href="logout.php" class="btn btn-danger mt-3">Logout</a>
+	</div>
 </body>
 </html>
 
