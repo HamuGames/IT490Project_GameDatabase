@@ -311,10 +311,76 @@ case "get_user_library":
 	}
 	//start of homepage cases
 
-case "homepage_dataa":
+case "homepage_data":
 	global $pdo;
 	$sessionKey = $request['session_key'];
+$getUser = $pdo->prepare("SELECT userid FROM sessions WHERE session_id = ?");
+        $getUser->execute([$sessionKey]);
+        $userR = $getUser->fetch(PDO::FETCH_ASSOC);
+        if (!$userR) {
+        return array("returnCode" => '0', 'message' => "Login again please");
+        }
+        $userId = $userR['userid'];
+//random games not in usr lib.
+	$stRecs = $pdo->prepare("
+SELECT DISTINCT g.* FROM games g
+JOIN game_platforms gp ON g.gameId = gp.game_id
+JOIN user_platforms up ON gp.platform_id = up.platform_id
+JOIN game_genres gg ON g.gameId = gg.game_id
+JOIN user_genres ug ON gg.genre_id = ug.genre_id
+WHERE up.user_id = ? AND ug.user_id = ?
+AND g.gameId NOT IN (SELECT game_id FROM user_library WHERE user_id = ?)
+ORDER BY RAND() LIMIT 4 ");
+	$stRecs->execute([$userId, $userId, $userId]);
+$recs = $stRecs->fetchAll(PDO::FETCH_ASSOC);
+//upcoming games
+$platStmt = $pdo->prepare("SELECT platform_id FROM user_platforms WHERE user_id = ?");
+$platStmt->execute([$userId]);
+$uPlats = $platStmt->fetchAll(PDO::FETCH_COLUMN);
 
+$genStmt = $pdo->prepare("SELECT genre_id FROM user_genres WHERE user_id = ?");
+$genStmt->execute([$userId]);
+$uGens = $genStmt->fetchAll(PDO::FETCH_COLUMN);
+
+global $client_id, $client_secret;
+$token = getIGDBToken($client_id, $client_secret);
+
+$upcoming = harvestUpcomingGames($pdo, $client_id, $token, $uPlats, $uGens);
+$upc = [];
+foreach ($upcoming as $uc) {
+	$upc[] = [
+		'gameId' => $uc['id'],
+		'title' => $uc['name'],
+		'cover_url' => $uc['cover']['image_id'] ?? null
+	];
+}
+
+//random games based on game from user library
+$stLibGame = $pdo->prepare("SELECT g.* FROM user_library ul
+	JOIN games g ON ul.game_id = g.gameId
+WHERE ul.user_id = ? ORDER BY RAND() LIMIT 1");
+$stLibGame->execute([$userId]);
+$libGame = $stLibGame->fetch(PDO::FETCH_ASSOC);
+
+$related = [];
+if ($libGame) {
+	$stRel = $pdo->prepare("
+SELECT DISTINCT g.* FROM games g
+JOIN game_genres gg ON g.gameId = gg.game_id
+WHERE gg.genre_id IN (SELECT genre_id FROM game_genres WHERE game_id = ?)
+AND g.gameId != ?
+LIMIT 4 ");
+
+$stRel->execute([$libGame['gameId'], $libGame['gameId']]);
+$related = $stRel->fetchAll(PDO::FETCH_ASSOC);
+}
+return array("returnCode" => '1', "data" => [
+	"recommendations" => $recs,
+	"upcoming" => $upc,
+	"lib_game" => $libGame,
+	"related" => $related
+]
+);
 
 
 	//end of homepage cases
