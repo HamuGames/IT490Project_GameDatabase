@@ -1,6 +1,6 @@
 <?php
 session_start();
-if (!isset($_SESSION['logged_in']) && $_SESSION['logged_in'] !== true) {
+if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
         header("Location: index.php");
         exit(0);
 }
@@ -13,6 +13,7 @@ if (!isset($_SESSION['console'])) {
 <!DOCTYPE html>
 <html>
 <head>
+<<<<<<< HEAD
 <title>Home - GAMERS DUNGEON</title>
 
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -63,6 +64,17 @@ if (isset($_SESSION['purpose'])) {
 <a href="logout.php" class="btn btn-danger">
 
 </a>
+=======
+<title> Home - GAMERS DUNGEON (or whatever the name of our site is lol) </title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="bg-light">
+<?php include('navBar.php'); ?>
+	<div class="container mt-5">
+		<h1 class="display-4">Welcome, <?php echo htmlspecialchars($_SESSION['username']); ?>!</h1>
+<hr>
+<p class="lead">This is the HomePage! </p>
+>>>>>>> origin/main
 </div>
 
 </div>

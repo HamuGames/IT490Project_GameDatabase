@@ -3,11 +3,26 @@
 require_once('path.inc');
 require_once('get_host_info.inc');
 require_once('rabbitMQLib.inc');
+require_once('config.php');
+require_once('igdbHarvester.php');
+
+try {
+    $pdo = new PDO("mysql:host=$db_host;dbname=$db_name;charset=utf8mb4", $db_user, $db_pass);
+    $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+} catch (PDOException $e) {
+    die("ERROR: Could not connect to database. " . $e->getMessage());
+}
 
 function doLogin($username,$password)
 {
+<<<<<<< HEAD
  //	$mydb = new mysqli("100.122.9.125", "Hamu", "11301250", "IT490");	
 	$mydb = new mysqli("100.68.213.94", "AriUser", "11301250", "IT490");
+=======
+	global $db_host, $db_user, $db_pass, $db_name;
+
+	$mydb = new mysqli($db_host, $db_user, $db_pass, $db_name);	
+>>>>>>> origin/main
 
     if ($mydb->connect_error){
 	    return array("status" => false, "message" => "Connection to Database failed"); }
@@ -50,8 +65,14 @@ $mydb->close();
 
 function doLogout($sessionKey) {
 
+<<<<<<< HEAD
 //      $mydb = new mysqli("100.122.9.125", "Hamu", "11301250", "IT490");
         $mydb = new mysqli("100.68.213.94", "AriUser", "11301250", "IT490");
+=======
+	global $db_host, $db_user, $db_pass, $db_name;
+
+        $mydb = new mysqli($db_host, $db_user, $db_pass, $db_name);
+>>>>>>> origin/main
 
 if ($mydb->connect_error){
             return array("status" => false, "message" => "Connection to Database failed"); }
@@ -70,8 +91,14 @@ if ($mydb->connect_error){
 
 function doRegister($fName,$lName,$email,$username,$password)
 {
+<<<<<<< HEAD
 //	$mydb = new mysqli("100.122.9.125", "Hamu", "11301250", "IT490");
 	$mydb = new mysqli("100.68.213.94", "AriUser", "11301250", "IT490");
+=======
+global $db_host, $db_user, $db_pass, $db_name;
+
+        $mydb = new mysqli($db_host, $db_user, $db_pass, $db_name);
+>>>>>>> origin/main
 
     if ($mydb->connect_error){
             return array("status" => false, "message" => "Connection to Database failed"); }
@@ -115,6 +142,7 @@ if ($stmt->fetch()) {
 
 function requestProcessor($request)
 {
+	global $pdo, $client_id, $client_secret;
   echo "received request".PHP_EOL;
   var_dump($request);
   if(!isset($request['type']))
@@ -132,9 +160,104 @@ function requestProcessor($request)
     case "logout":
 	    return doLogout($request['session_key']);
     case "validate_session":
-	    return doValidate($request['sessionId']); 
+	    return doValidate($request['sessionId']);
+    case "search_games":
+	    $searchTerm = $request['query'];
+	    $stmt = $pdo->prepare("SELECT gameId as id, title as name, summary, cover_url as cover_image, rating FROM games WHERE title LIKE ?");
+	    $stmt->execute(["%$searchTerm%"]);
+	    $local_results = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+	    if (!empty($local_results)) {
+	    return array("returnCode" => '1', 'message' => "Loaded from local DB", 'data' => $local_results);
+	    }
+
+	    $token = getIGDBToken($client_id, $client_secret);
+if (!$token) {
+        return array("returnCode" => '0', 'message' => "API Auth Failed");
+    }
+
+    $api_results = harvestGameData($searchTerm, $pdo, $client_id, $token);
+
+    if (!empty($api_results)) {
+	    $format = [];
+	    foreach ($api_results as $r) {
+		    $format[] = [
+			    'id' => $r['id'],
+			    'name' => $r['name'],
+			    'summary' => $r['summary'] ?? "",
+			    'cover_image' => $r['cover']['image_id'] ?? null,
+			    'rating' => $r['rating'] ??null
+		    ];
+	    }
+        return array("returnCode" => '1', 'message' => "Harvested from IGDB", 'data' => $format);
+    } else {
+        return array("returnCode" => '0', 'message' => "Game not found anywhere");
+    }
+    case "get_game_details":
+	    global $pdo;
+	    $gameId = $request['game_id'];
+
+	    $stmt = $pdo->prepare("SELECT * FROM games WHERE gameId = ?");
+	    $stmt->execute([$gameId]);
+	    $data = $stmt->fetch(PDO::FETCH_ASSOC);
+
+	    if ($data) {
+		    return array("returnCode" => '1', 'message' => "Data harvesting successful", 'data' => $data);
+	    }
+	    else {
+	    return array("returnCode" => '0', 'message' => "Game not Found");
+	    }
+case "addToLibrary":
+	global $pdo;
+	$sessionKey = $request['session_key'];
+	$gameId = $request['game_id'];
+	$status = $request['status'];
+
+	$getUser = $pdo->prepare("SELECT userid FROM sessions WHERE session_id = ?");
+	$getUser->execute([$sessionKey]);
+	$userR = $getUser->fetch(PDO::FETCH_ASSOC);
+	if (!$userR) {
+	return array("returnCode" => '0', 'message' => "Login again please");
+	}
+
+	$userId = $userR['userid'];
+
+	$check = $pdo->prepare("SELECT id FROM user_library WHERE user_id = ? AND game_id = ?");
+	$check->execute([$userId, $gameId]);
+
+	if ($check->rowCount() > 0) {
+		$update = $pdo->prepare("UPDATE user_library SET status = ? WHERE user_id = ? AND game_id = ?");
+	if ($update->execute([$status, $userId, $gameId])) {
+		return array("returnCode" => '1', 'message' => "Library Updated!");
+	}
+	}
+	else {
+		$insert = $pdo->prepare("INSERT INTO user_library (user_id, game_id, status) VALUES (?, ?, ?)");
+		if ($insert->execute([$userId, $gameId, $status])) {
+		return array ("returnCode" => '1', 'message' => "Added to your library!");
+		}
+	}
+	return array("returnCode" => '0', 'message' => "Error While updating library.(DB)");
+
+case "get_user_library":
+	global $pdo;
+	$sessionKey = $request['session_key'];
+
+	$stmt = $pdo->prepare("SELECT g.gameId, g.title, g.cover_url, l.status FROM user_library l JOIN games g ON l.game_id = g.gameId JOIN sessions s ON l.user_id = s.userid WHERE s.session_id = ? ");
+	$stmt->execute([$sessionKey]);
+	$userGames = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+	if ($userGames) {
+		return array("returnCode" => '1', 'message' => "Library pulled! ", 'data' => $userGames);
+	}
+	else {
+	return array("returnCode" => '0', 'message' => "Library is Empty! ");
+	}
+
+//end of switch	
   }
   return array("returnCode" => '0', 'message'=>"Server received request and processed");
+
 }
 
 $server = new rabbitMQServer("testRabbitMQ.ini","testServer");

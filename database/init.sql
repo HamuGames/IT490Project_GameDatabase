@@ -61,6 +61,99 @@ CREATE TABLE `users` (
 ) ENGINE=InnoDB AUTO_INCREMENT=12 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
+DROP TABLE IF EXISTS `games`;
+CREATE TABLE `games` (
+	`gameId` int NOT NULL,
+	`title` varchar(255) NOT NULL,
+	`summary` text  NULL,
+	`cover_url` varchar(255) NULL,
+       	`rating` decimal(5,2) NULL,
+	`release_date` date NULL,
+	PRIMARY KEY (`gameId`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+
+
+DROP TABLE IF EXISTS `platforms`;
+CREATE TABLE `platforms` (
+	`platformId` int NOT NULL,
+	`name` varchar(100) NOT NULL,
+	PRIMARY KEY (`platformId`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+DROP TABLE IF EXISTS `genres`;
+CREATE TABLE `genres` (
+	`genreId` int NOT NULL,
+	`name` varchar(100) NOT NULL,
+	PRIMARY KEY (`genreId`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+DROP TABLE IF EXISTS `game_platforms`;
+CREATE TABLE `game_platforms` (
+	`game_id` int NOT NULL,
+	`platform_id` int NOT NULL, 
+	PRIMARY KEY (`game_id`, `platform_id`),
+	FOREIGN KEY (`game_id`) REFERENCES `games`(`gameId`) ON DELETE CASCADE,
+	FOREIGN KEY (`platform_id`) REFERENCES `platforms`(`platformId`) ON DELETE CASCADE) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+
+DROP TABLE IF EXISTS `game_genres`;
+CREATE TABLE `game_genres` (
+	`game_id` int NOT NULL,
+	`genre_id` int NOT NULL,
+	PRIMARY KEY (`game_id`, `genre_id`),
+	FOREIGN KEY (`game_id`) REFERENCES `games`(`gameId`) ON DELETE CASCADE,
+	FOREIGN KEY (`genre_id`) REFERENCES `genres`(`genreId`) ON DELETE CASCADE) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+DROP TABLE IF EXISTS `user_platforms`;
+CREATE TABLE `user_platforms` (
+	`user_id` int NOT NULL,
+	`platform_id` int NOT NULL,
+	PRIMARY KEY (`user_id`, `platform_id`),
+	FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON DELETE CASCADE,
+	FOREIGN KEY (`platform_id`) REFERENCES `platforms`(`platformId`) ON DELETE CASCADE) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4; 
+
+DROP TABLE IF EXISTS `user_library`;
+CREATE TABLE `user_library` (
+	`id` int NOT NULL AUTO_INCREMENT,
+	`user_id` int NOT NULL,
+	`game_id` int NOT NULL,
+	`status` enum('watchlist', 'playing', 'completed', 'dropped') DEFAULT 'watchlist',
+	PRIMARY KEY (`id`),
+	FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON DELETE CASCADE,
+	FOREIGN KEY (`game_id`) REFERENCES `games`(`gameId`) ON DELETE CASCADE) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+DROP TABLE IF EXISTS `reviews`;
+CREATE TABLE `reviews` (
+	`id` int NOT NULL AUTO_INCREMENT,
+	`user_id` int NOT NULL,
+	`game_id` int NOT NULL,
+	`rating` int CHECK (rating BETWEEN 1 AND 10),
+	`comment` text,
+	`created_at` timestamp DEFAULT CURRENT_TIMESTAMP,
+	PRIMARY KEY (`id`),
+	FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON DELETE CASCADE,
+	FOREIGN KEY (`game_id`) REFERENCES `games`(`gameId`) ON DELETE CASCADE) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+
+INSERT IGNORE INTO platforms (platformId, name) VALUES
+(3, 'Linux'), (6, 'PC (Microsoft Windows)'), (7, 'PlayStation'),
+(8, 'PlayStation 2'), (9, 'PlayStation 3'), (11, 'Xbox'),
+(12, 'Xbox 360'), (13, 'PC (DOS)'), (14, 'Mac'),
+(18, 'Nintendo Entertainment System (NES)'), (19, 'Super Nintendo Entertainment System (SNES)'),
+(34, 'Android'), (39, 'iOS'), (48, 'PlayStation 4'),
+(49, 'Xbox One'), (130, 'Nintendo Switch'), (167, 'PlayStation 5'),
+(169, 'Xbox Series X|S');
+
+
+INSERT IGNORE INTO genres (genreId, name) VALUES
+(2, 'Point-and-click'), (4, 'Fighting'), (5, 'Shooter'),
+(7, 'Music'), (8, 'Platform'), (9, 'Puzzle'),
+(10, 'Racing'), (11, 'Real Time Strategy (RTS)'), (12, 'Role-playing (RPG)'),
+(13, 'Simulator'), (14, 'Sport'), (15, 'Strategy'),
+(16, 'Turn-based strategy (TBS)'), (24, 'Tactical'), (25, 'Hack and slash/Beat em up'),
+(26, 'Quiz/Trivia'), (31, 'Adventure'), (32, 'Indie'),
+(33, 'Arcade'), (34, 'Visual Novel'), (35, 'Card & Board Game'), (36, 'MOBA');
 --
 -- Dumping data for table `users`
 --
