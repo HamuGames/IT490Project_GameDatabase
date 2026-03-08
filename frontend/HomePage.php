@@ -1,10 +1,9 @@
 <?php
-<!--
 session_start();
+include('config.php');
 if (!isset($_SESSION['logged_in']) && $_SESSION['logged_in'] !== true) {
         header("Location: index.php");
         exit(0);
--->
 }
 $sql=$db->prepare('SELECT * FROM mytable WHERE category=:category');
 $sql->execute(array(':category'=>$_REQUEST[searchcategory]));
