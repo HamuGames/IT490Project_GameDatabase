@@ -216,3 +216,5 @@ if (!isset($_SESSION['new_registration']) || $_SESSION['new_registration'] !== t
         request.send(data);
     }
     </script>
+</body>
+</html>
