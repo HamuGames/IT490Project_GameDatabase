@@ -157,6 +157,77 @@ function requestProcessor($request)
 	    $test_hash = password_hash($request['password'], PASSWORD_DEFAULT);
 	    echo "Hashed: " .  $test_hash . PHP_EOL;
 	    return doRegister($request['fName'],$request['lName'],$request['email'],$request['username'],$request['password']);
+	    //user preferences start
+	    
+    case "get_preferences":
+	    global $pdo;
+	    $sessionKey = $request['session_key'];
+
+	$gUser = $pdo->prepare("SELECT userid FROM sessions WHERE session_id = ?");
+    	$gUser->execute([$sessionKey]);
+	$userR = $gUser->fetch(PDO::FETCH_ASSOC);
+
+	if (!$userR) {
+	return array("returnCode" => '0', 'message' => "Login Again");
+	}
+	$userId = $userR['userid'];
+$evryPlatform = $pdo->query("SELECT platformId as id, name FROM platforms ORDER BY name ASC")->fetchAll(PDO::FETCH_ASSOC);
+$evryGenre = $pdo->query("SELECT genreId as id, name FROM genres ORDER BY name ASC")->fetchAll(PDO::FETCH_ASSOC);
+
+$usrPlatsSt = $pdo->prepare("SELECT platform_id FROM user_platforms WHERE user_id = ?");
+$usrPlatsSt->execute([$userId]);
+$usrPlats = $usrPlatsSt->fetchALL(PDO::FETCH_COLUMN);
+
+$usrGensSt = $pdo->prepare("SELECT genre_id FROM user_genres WHERE user_id = ?");
+$usrGensSt->execute([$userId]);
+$usrGens = $usrGensSt->fetchALL(PDO::FETCH_COLUMN);
+
+$data = [
+
+'all_platforms' => $evryPlatform,
+'all_genres' => $evryGenre,
+'user_platforms' => $usrPlats,
+'user_genres' => $usrGens
+
+];
+return array("returnCode" => '1', 'message' => "Preferences Loaded", 'data' => $data);
+	    
+case "save_preferences":
+	global $pdo;
+$sessionKey = $request['session_key'];
+$platforms = $request['platforms'] ?? [];
+$genres = $request['genres'] ?? [];
+
+$gUser = $pdo->prepare("SELECT userid FROM sessions WHERE session_id = ?");
+$gUser->execute([$sessionKey]);
+$userR = $gUser->fetch(PDO::FETCH_ASSOC);
+    if (!$userR) return array("returnCode" => '0', "message" => "Session expired");
+$userId = $userR['userid'];
+
+$pdo->beginTransaction();
+try {
+	//first clear all preferences
+$pdo->prepare("DELETE FROM user_platforms WHERE user_id = ?")->execute([$userId]);
+$pdo->prepare("DELETE FROM user_genres WHERE user_id = ?")->execute([$userId]);
+// ins. user plats.
+$platStmt = $pdo->prepare("INSERT INTO user_platforms (user_id, platform_id) VALUES (?, ?)");
+ foreach ($platforms as $pId) {
+ $platStmt->execute([$userId, $pId]);
+ }
+// ins. user genres
+        $genStmt = $pdo->prepare("INSERT INTO user_genres (user_id, genre_id) VALUES (?, ?)");
+        foreach ($genres as $gId) {
+            $genStmt->execute([$userId, $gId]);
+    }
+   $pdo->commit();
+  return array("returnCode" => '1', "message" => "Preferences saved.");
+    } catch (Exception $e) {
+        $pdo->rollBack();
+        return array("returnCode" => '0', "message" => "Database error: " . $e->getMessage());
+    }
+
+//user preferences end 
+    
     case "logout":
 	    return doLogout($request['session_key']);
     case "validate_session":
@@ -197,7 +268,7 @@ if (!$token) {
 	    global $pdo;
 	    $gameId = $request['game_id'];
 
-	    $stmt = $pdo->prepare("SELECT * FROM games WHERE gameId = ?");
+	    $stmt = $pdo->prepare("SELECT g.*, GROUP_CONCAT(p.name SEPARATOR ', ') as platform_list FROM games g LEFT JOIN game_platforms gp ON g.gameId = gp.game_id LEFT JOIN platforms p ON gp.platform_id = p.platformId WHERE g.gameId = ? GROUP BY g.gameId");
 	    $stmt->execute([$gameId]);
 	    $data = $stmt->fetch(PDO::FETCH_ASSOC);
 
@@ -253,7 +324,81 @@ case "get_user_library":
 	else {
 	return array("returnCode" => '0', 'message' => "Library is Empty! ");
 	}
+	//start of homepage cases
 
+case "homepage_data":
+	global $pdo;
+	$sessionKey = $request['session_key'];
+$getUser = $pdo->prepare("SELECT userid FROM sessions WHERE session_id = ?");
+        $getUser->execute([$sessionKey]);
+        $userR = $getUser->fetch(PDO::FETCH_ASSOC);
+        if (!$userR) {
+        return array("returnCode" => '0', 'message' => "Login again please");
+        }
+        $userId = $userR['userid'];
+//random games not in usr lib.
+	$stRecs = $pdo->prepare("
+SELECT DISTINCT g.* FROM games g
+JOIN game_platforms gp ON g.gameId = gp.game_id
+JOIN user_platforms up ON gp.platform_id = up.platform_id
+JOIN game_genres gg ON g.gameId = gg.game_id
+JOIN user_genres ug ON gg.genre_id = ug.genre_id
+WHERE up.user_id = ? AND ug.user_id = ?
+AND g.gameId NOT IN (SELECT game_id FROM user_library WHERE user_id = ?)
+ORDER BY RAND() LIMIT 4 ");
+	$stRecs->execute([$userId, $userId, $userId]);
+$recs = $stRecs->fetchAll(PDO::FETCH_ASSOC);
+//upcoming games
+$platStmt = $pdo->prepare("SELECT platform_id FROM user_platforms WHERE user_id = ?");
+$platStmt->execute([$userId]);
+$uPlats = $platStmt->fetchAll(PDO::FETCH_COLUMN);
+
+$genStmt = $pdo->prepare("SELECT genre_id FROM user_genres WHERE user_id = ?");
+$genStmt->execute([$userId]);
+$uGens = $genStmt->fetchAll(PDO::FETCH_COLUMN);
+
+global $client_id, $client_secret;
+$token = getIGDBToken($client_id, $client_secret);
+
+$upcoming = harvestUpcomingGames($pdo, $client_id, $token, $uPlats, $uGens);
+$upc = [];
+foreach ($upcoming as $uc) {
+	$upc[] = [
+		'gameId' => $uc['id'],
+		'title' => $uc['name'],
+		'cover_url' => $uc['cover']['image_id'] ?? null
+	];
+}
+
+//random games based on game from user library
+$stLibGame = $pdo->prepare("SELECT g.* FROM user_library ul
+	JOIN games g ON ul.game_id = g.gameId
+WHERE ul.user_id = ? ORDER BY RAND() LIMIT 1");
+$stLibGame->execute([$userId]);
+$libGame = $stLibGame->fetch(PDO::FETCH_ASSOC);
+
+$related = [];
+if ($libGame) {
+	$stRel = $pdo->prepare("
+SELECT DISTINCT g.* FROM games g
+JOIN game_genres gg ON g.gameId = gg.game_id
+WHERE gg.genre_id IN (SELECT genre_id FROM game_genres WHERE game_id = ?)
+AND g.gameId != ?
+LIMIT 4 ");
+
+$stRel->execute([$libGame['gameId'], $libGame['gameId']]);
+$related = $stRel->fetchAll(PDO::FETCH_ASSOC);
+}
+return array("returnCode" => '1', "data" => [
+	"recommendations" => $recs,
+	"upcoming" => $upc,
+	"lib_game" => $libGame,
+	"related" => $related
+]
+);
+
+
+	//end of homepage cases
 //end of switch	
   }
   return array("returnCode" => '0', 'message'=>"Server received request and processed");

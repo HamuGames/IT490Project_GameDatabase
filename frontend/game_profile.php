@@ -60,6 +60,7 @@ else {
 <div class="badge bg-primary fs-5 mb-4">Rating: <?php echo round($game['rating']); ?>/100</div>
 <h4>Description:</h4>
 <p class="lead text-secondary"><?php echo htmlspecialchars($game['summary']); ?></p>
+<p class="text-muted"><strong>Available on:</strong> <?php echo htmlspecialchars($game['platform_list'] ?? 'N/A'); ?></p>
 <div class="mt-5">
     <form action="userLibrary.php" method="POST" class="d-inline-block">
         <input type="hidden" name="game_id" value="<?php echo htmlspecialchars($game['gameId']); ?>">
