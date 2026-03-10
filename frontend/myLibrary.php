@@ -53,10 +53,11 @@ if (isset($response['returnCode']) && $response['returnCode'] == '1') {
  <div class="card-body text-center">
  <h6 class="card-title fw-bold text-truncate"><?php echo htmlspecialchars($game['title']); ?></h6>
  <span class="badge bg-secondary text-uppercase"><?php echo htmlspecialchars($game['status']); ?></span>
+</div>
+ </a>
+<div class="card-footer bg-white border-0 text-center pt-2">
 <a href="removeGame.php?id=<?php echo $game['gameId']; ?>" class="btn btn-sm btn-danger w-100">Remove from Library</a>
 </div>
-<a href="removeGame.php?id=<?php echo $game['gameId']; ?>" class="btn btn-sm btn-danger w-100">Remove from Library</a>
- </a>
  </div>
   </div>
  <?php endforeach; ?>

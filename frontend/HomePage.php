@@ -28,6 +28,7 @@ $related = $response['data']['related'] ?? [];
 <head>
 <title> Home - GAMERS DUNGEON (or whatever the name of our site is lol) </title>
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet">
+<link rel="stylesheet" href="css/main.css">
 <style>
 .game-card img { height: 300px; object-fit: cover; transition: transform .3s; }
 .game-card:hover { transform: translateY(-5px); transition: 0.3s; }
