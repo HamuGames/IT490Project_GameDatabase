@@ -44,7 +44,7 @@ function SendRegisterRequest(fName,lName,email,username,password)
 <div class="row justify-content-center">
 <div class="col-md-4 card p-4 shadow-sm">
 <h2 class="text-center mb-4">Registration Page</h2>
-<form>
+<form onSubmit="onboarding.php">
 <div class="mb-3">
         <label class=="form-label">First Name</label>
 	<input class="form-control" type="text" id="fName" placeholder="First Name" required><br>
