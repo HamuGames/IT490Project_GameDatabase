@@ -114,9 +114,21 @@ if ($stmt->fetch()) {
 	$createUser->bind_param("sssss", $fName, $lName, $email, $username, $hash);
 
 	if ($createUser->execute()) {
+		$userid = $mydb->insert_id;
 		$createUser->close();
+
+		$sessionKey = bin2hex(random_bytes(16));
+$session = $mydb->prepare("INSERT INTO sessions (userid, session_id) VALUES (?, ?) ON DUPLICATE KEY UPDATE session_id = ?, created_at = CURRENT_TIMESTAMP");
+		$session->bind_param("iss", $userid, $sessionKey, $sessionKey);
+
+		if (!$session->execute()){
+			$session->close();
+			$mydb->close();
+			return array("status" => false, "message" => "Session Error" . $mydb->error);
+		}
+
 		$mydb->close();
-		return array("status" => true, "message" => "You have Registered successfully!");
+		return array("status" => true, "message" => "You have Registered successfully!", "session_key" => $sessionKey);
 	}
 	else {
 		$createUser->close();
@@ -299,7 +311,6 @@ case "removeGame":
 	global $pdo;
 	$sessionKey = $request['session_key'];
 	$gameId = $request['game_id'];
-	$status = $request['status'];
 
 	$getUser = $pdo->prepare("SELECT userid FROM sessions WHERE session_id = ?");
 	$getUser->execute([$sessionKey]);
@@ -310,22 +321,12 @@ case "removeGame":
 
 	$userId = $userR['userid'];
 
-	$check = $pdo->prepare("SELECT id FROM user_library WHERE user_id = ? AND game_id = ?");
-	$check->execute([$userId, $gameId]);
-
-	if ($check->rowCount() > 0) {
-		$update = $pdo->prepare("REMOVE from  user_library WHERE user_id = ? AND game_id = ?");
-	if ($update->execute([$status, $userId, $gameId])) {
-		return array("returnCode" => '1', 'message' => "Library Updated!");
+		$update = $pdo->prepare("DELETE from  user_library WHERE user_id = ? AND game_id = ?");
+	if ($update->execute([ $userId, $gameId])) {
+		return array("returnCode" => '1', 'message' => "Game Removed");
 	}
-	}
-	else {
-		$insert = $pdo->prepare("INSERT INTO user_library (user_id, game_id, status) VALUES (?, ?, ?)");
-		if ($insert->execute([$userId, $gameId, $status])) {
-		return array ("returnCode" => '1', 'message' => "Added to your library!");
-		}
-	}
-	return array("returnCode" => '0', 'message' => "Error While updating library.(DB)");
+	else{
+		return array("returnCode" => '0', 'message' => "Error While updating library.(DB)");}
 	//remove game ends here
 case "get_user_library":
 	global $pdo;

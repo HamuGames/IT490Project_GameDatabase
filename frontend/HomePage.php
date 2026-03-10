@@ -38,6 +38,7 @@ $related = $response['data']['related'] ?? [];
 <div class="container mt-4">
 	<h1 class="display-5 fw-bold mb-4 text-dark">Welcome, <?php echo htmlspecialchars($_SESSION['username']); ?>!</h1>
 <section>
+
 <form>
                 <input type="text" name="searchcategory" placeholder="Search Games...">
                 <button>
