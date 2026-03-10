@@ -114,9 +114,21 @@ if ($stmt->fetch()) {
 	$createUser->bind_param("sssss", $fName, $lName, $email, $username, $hash);
 
 	if ($createUser->execute()) {
+		$userid = $mydb->insert_id;
 		$createUser->close();
+
+		$sessionKey = bin2hex(random_bytes(16));
+$session = $mydb->prepare("INSERT INTO sessions (userid, session_id) VALUES (?, ?) ON DUPLICATE KEY UPDATE session_id = ?, created_at = CURRENT_TIMESTAMP");
+		$session->bind_param("iss", $userid, $sessionKey, $sessionKey);
+
+		if (!$session->execute()){
+			$session->close();
+			$mydb->close();
+			return array("status" => false, "message" => "Session Error" . $mydb->error);
+		}
+
 		$mydb->close();
-		return array("status" => true, "message" => "You have Registered successfully!");
+		return array("status" => true, "message" => "You have Registered successfully!", "session_key" => $sessionKey);
 	}
 	else {
 		$createUser->close();
@@ -294,7 +306,28 @@ case "addToLibrary":
 		}
 	}
 	return array("returnCode" => '0', 'message' => "Error While updating library.(DB)");
+//remove game goes here
+case "removeGame":
+	global $pdo;
+	$sessionKey = $request['session_key'];
+	$gameId = $request['game_id'];
 
+	$getUser = $pdo->prepare("SELECT userid FROM sessions WHERE session_id = ?");
+	$getUser->execute([$sessionKey]);
+	$userR = $getUser->fetch(PDO::FETCH_ASSOC);
+	if (!$userR) {
+	return array("returnCode" => '0', 'message' => "Login again please");
+	}
+
+	$userId = $userR['userid'];
+
+		$update = $pdo->prepare("DELETE from  user_library WHERE user_id = ? AND game_id = ?");
+	if ($update->execute([ $userId, $gameId])) {
+		return array("returnCode" => '1', 'message' => "Game Removed");
+	}
+	else{
+		return array("returnCode" => '0', 'message' => "Error While updating library.(DB)");}
+	//remove game ends here
 case "get_user_library":
 	global $pdo;
 	$sessionKey = $request['session_key'];

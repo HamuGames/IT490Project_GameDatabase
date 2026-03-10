@@ -65,7 +65,7 @@ $evryGenre = $response['data']['all_genres'] ?? [];
             <div class="col-md-8">
      <form action="savePreferences.php" method="POST" id="onboardingForm">
                 <div class="progress">
-                    <div class="progress-bar" role="progressbar" style="width: 50%;" aria-valuenow="50" aria-valuemin="0" aria-valuemax="100">Step 1/2</div>
+                    <div class="progress-bar" id="progressbar" role="progressbar" style="width: 50%;" aria-valuenow="50" aria-valuemin="0" aria-valuemax="100">Step 1/2</div>
                 </div>
 
                 <!-- Step 1: Favorite Genres -->
