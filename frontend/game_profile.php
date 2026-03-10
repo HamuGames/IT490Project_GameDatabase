@@ -65,7 +65,7 @@ else {
 <div class="mt-5">
     <form action="userLibrary.php" method="POST" class="d-inline-block">
         <input type="hidden" name="game_id" value="<?php echo htmlspecialchars($game['gameId']); ?>">
-        
+    <!--Right now this section just changes the status of the game when adding to library. NEXT STEPS: inside myLibrary user should be able to see a separate section for watchlist, playing, completed. Additionally users will be able to get EMAIL alerts when a game with a release data over to NOW() becomes current. Signaling new release.  push-->    
         <div class="input-group">
             <select name="status" class="form-select form-select-lg" style="max-width: 150px;">
                 <option value="watchlist">Watchlist</option>

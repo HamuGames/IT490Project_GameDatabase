@@ -28,6 +28,7 @@ $evryGenre = $response['data']['all_genres'] ?? [];
 ?>
 <!DOCTYPE html>
 <html>
+<!--THIS PAGE IS ONLY ACCESSED ONCE after user clicks REGISTER. does the same as change preferences but it looks more like a part of registration than settings page. -->
 <head>
     <title>Game Preferences - GAMERS DUNGEON</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -68,7 +69,7 @@ $evryGenre = $response['data']['all_genres'] ?? [];
                     <div class="progress-bar" id="progressbar" role="progressbar" style="width: 50%;" aria-valuenow="50" aria-valuemin="0" aria-valuemax="100">Step 1/2</div>
                 </div>
 
-                <!-- Step 1: Favorite Genres -->
+                <!--Favorite Genres. Instead of hardcodign each genre or platform down below, there is a loop that creates a clickable button PER entry in the game_platforms and game_genres table in sql. -->
                 <div id="step1" class="preference-card shadow-sm">
                     <h3 class="mb-4">Welcome, <?php echo htmlspecialchars($_SESSION['username']); ?>! 👋</h3>
                     <h4 class="mb-3">Step 1: What game genres do you enjoy?</h4>

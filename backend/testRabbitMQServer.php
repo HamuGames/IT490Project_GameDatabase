@@ -6,14 +6,11 @@ require_once('rabbitMQLib.inc');
 require_once('config.php');
 require_once('igdbHarvester.php');
 
-try {
     $pdo = new PDO("mysql:host=$db_host;dbname=$db_name;charset=utf8mb4", $db_user, $db_pass);
     $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-} catch (PDOException $e) {
-    die("ERROR: Could not connect to database. " . $e->getMessage());
-}
 
-function doLogin($username,$password)
+
+function login($username,$password)
 {
 	global $db_host, $db_user, $db_pass, $db_name;
 
@@ -21,9 +18,6 @@ function doLogin($username,$password)
 
     if ($mydb->connect_error){
 	    return array("status" => false, "message" => "Connection to Database failed"); }
-    //SESSION
-
-    //SESSION
     $stmt = $mydb->prepare("SELECT id, password FROM users WHERE username = ?");	
 $stmt->bind_param("s", $username);
 $stmt->execute();
@@ -58,7 +52,7 @@ $mydb->close();
 	$mydb->close();
 }
 
-function doLogout($sessionKey) {
+function logout($sessionKey) {
 
 	global $db_host, $db_user, $db_pass, $db_name;
 
@@ -79,7 +73,7 @@ if ($mydb->connect_error){
 	return array("status" => true, "message" => "Session terminated in Database");
 }
 
-function doRegister($fName,$lName,$email,$username,$password)
+function register($fName,$lName,$email,$username,$password)
 {
 global $db_host, $db_user, $db_pass, $db_name;
 
@@ -91,14 +85,11 @@ global $db_host, $db_user, $db_pass, $db_name;
 	$stmt = $mydb->prepare("SELECT username, email FROM users WHERE username = ? OR email = ?");
 	$stmt->bind_param("ss", $username, $email);
 	$stmt->execute();
-//	$stmt->store_result();
 $stmt->bind_result($tempUser, $tempEmail);
 
-//if ($stmt->num_rows > 0) {
 if ($stmt->fetch()) {
 		$stmt->close();
 		$mydb->close();
-		//return array("status" => false, "message" => "Username is taken, or email already in use");
 		if (strtolower($tempUser) === strtolower($username)) {
 		return array("status" => false, "message" => "Username is already taken");
 		}
@@ -140,20 +131,20 @@ $session = $mydb->prepare("INSERT INTO sessions (userid, session_id) VALUES (?, 
 function requestProcessor($request)
 {
 	global $pdo, $client_id, $client_secret;
-  echo "received request".PHP_EOL;
+	echo "received request".PHP_EOL;
   var_dump($request);
-  if(!isset($request['type']))
+	if(!isset($request['type']))
   {
     return "ERROR: unsupported message type";
   }
   switch ($request['type'])
   {
     case "login":
-      return doLogin($request['username'],$request['password']);
+      return login($request['username'],$request['password']);
     case "register":
 	    $test_hash = password_hash($request['password'], PASSWORD_DEFAULT);
 	    echo "Hashed: " .  $test_hash . PHP_EOL;
-	    return doRegister($request['fName'],$request['lName'],$request['email'],$request['username'],$request['password']);
+	    return register($request['fName'],$request['lName'],$request['email'],$request['username'],$request['password']);
 	    //user preferences start
 	    
     case "get_preferences":
@@ -202,8 +193,6 @@ $userR = $gUser->fetch(PDO::FETCH_ASSOC);
 $userId = $userR['userid'];
 
 $pdo->beginTransaction();
-try {
-	//first clear all preferences
 $pdo->prepare("DELETE FROM user_platforms WHERE user_id = ?")->execute([$userId]);
 $pdo->prepare("DELETE FROM user_genres WHERE user_id = ?")->execute([$userId]);
 // ins. user plats.
@@ -218,15 +207,10 @@ $platStmt = $pdo->prepare("INSERT INTO user_platforms (user_id, platform_id) VAL
     }
    $pdo->commit();
   return array("returnCode" => '1', "message" => "Preferences saved.");
-    } catch (Exception $e) {
-        $pdo->rollBack();
-        return array("returnCode" => '0', "message" => "Database error: " . $e->getMessage());
-    }
-
-//user preferences end 
+    
     
     case "logout":
-	    return doLogout($request['session_key']);
+	    return logout($request['session_key']);
     case "validate_session":
 	    return doValidate($request['sessionId']);
     case "search_games":
@@ -305,8 +289,6 @@ case "addToLibrary":
 		return array ("returnCode" => '1', 'message' => "Added to your library!");
 		}
 	}
-	return array("returnCode" => '0', 'message' => "Error While updating library.(DB)");
-//remove game goes here
 case "removeGame":
 	global $pdo;
 	$sessionKey = $request['session_key'];
@@ -325,9 +307,6 @@ case "removeGame":
 	if ($update->execute([ $userId, $gameId])) {
 		return array("returnCode" => '1', 'message' => "Game Removed");
 	}
-	else{
-		return array("returnCode" => '0', 'message' => "Error While updating library.(DB)");}
-	//remove game ends here
 case "get_user_library":
 	global $pdo;
 	$sessionKey = $request['session_key'];
@@ -342,7 +321,6 @@ case "get_user_library":
 	else {
 	return array("returnCode" => '0', 'message' => "Library is Empty! ");
 	}
-	//start of homepage cases
 
 case "homepage_data":
 	global $pdo;
@@ -354,7 +332,6 @@ $getUser = $pdo->prepare("SELECT userid FROM sessions WHERE session_id = ?");
         return array("returnCode" => '0', 'message' => "Login again please");
         }
         $userId = $userR['userid'];
-//random games not in usr lib.
 	$stRecs = $pdo->prepare("
 SELECT DISTINCT g.* FROM games g
 JOIN game_platforms gp ON g.gameId = gp.game_id
@@ -388,7 +365,7 @@ foreach ($upcoming as $uc) {
 	];
 }
 
-//random games based on game from user library
+//random 
 $stLibGame = $pdo->prepare("SELECT g.* FROM user_library ul
 	JOIN games g ON ul.game_id = g.gameId
 WHERE ul.user_id = ? ORDER BY RAND() LIMIT 1");
@@ -416,8 +393,7 @@ return array("returnCode" => '1', "data" => [
 );
 
 
-	//end of homepage cases
-//end of switch	
+//end cases.. 
   }
   return array("returnCode" => '0', 'message'=>"Server received request and processed");
 
