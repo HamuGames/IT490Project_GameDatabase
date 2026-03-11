@@ -55,28 +55,39 @@ else {
 	<img src="https://images.igdb.com/igdb/image/upload/t_cover_big/<?php echo $game['cover_url']; ?>.jpg" class="img-fluid w-100 h-100" style="object-fit: cover;" alt="Cover">
 </div>
 <div class="col-md-8 p-4 bg-white">
-<h1 class="fw-bold mb-1"><?php echo htmlspecialchars($game['title']); ?></h1>
-<p class="text-muted">Released on: <?php echo htmlspecialchars($game['release_date']); ?></p>
-<div class="badge bg-primary fs-5 mb-4">Rating: <?php echo round($game['rating']); ?>/100</div>
-<h4>Description:</h4>
-<p class="lead text-secondary"><?php echo htmlspecialchars($game['summary']); ?></p>
-<p class="text-muted"><strong>Available on:</strong> <?php echo htmlspecialchars($game['platform_list'] ?? 'N/A'); ?></p>
-<div class="mt-5">
-    <form action="userLibrary.php" method="POST" class="d-inline-block">
-        <input type="hidden" name="game_id" value="<?php echo htmlspecialchars($game['gameId']); ?>">
-        
-        <div class="input-group">
-            <select name="status" class="form-select form-select-lg" style="max-width: 150px;">
-                <option value="watchlist">Watchlist</option>
-                <option value="playing">Playing</option>
-                <option value="completed">Completed</option>
-            </select>
-            <button type="submit" class="btn btn-success btn-lg px-4 shadow">Add to Library</button>
-        </div>
-    </form>
-    <br>
-    <a href="javascript:history.back()" class="btn btn-outline-secondary btn-lg ms-2">Back to Results</a>
-</div>
+	<h1 class="fw-bold mb-1"><?php echo htmlspecialchars($game['title']); ?></h1>
+	<p class="text-muted">Released on: <?php echo htmlspecialchars($game['release_date']); ?></p>
+	<div class="badge bg-primary fs-5 mb-4">Rating: <?php echo round($game['rating']); ?>/100</div>
+	<h4>Description:</h4>
+	<p class="lead text-secondary"><?php echo htmlspecialchars($game['summary']); ?></p>
+	<p class="text-muted"><strong>Available on:</strong> <?php echo htmlspecialchars($game['platform_list'] ?? 'N/A'); ?></p>
+		<div class="mt-5">
+			<form action="userLibrary.php" method="POST" class="d-inline-block">
+				<input type="hidden" name="game_id" value="<?php echo htmlspecialchars($game['gameId']); ?>">		
+				<div class="input-group">
+					<select name="status" class="form-select form-select-lg" style="max-width: 150px;">
+						<option value="watchlist">Watchlist</option>
+						<option value="playing">Playing</option>
+						<option value="completed">Completed</option>
+					</select>
+					<button type="submit" class="btn btn-success btn-lg px-4 shadow">Add to Library</button>
+				</div>
+			</form>
+			<br>
+			<!-- this section is for writing the review of the game -->
+			<form action="game_review.php" method="POST" class="d-inline-block">
+				<label> Write a Review: </label>
+				<input type="number" name="gameRating" value="<?php echo htmlspecialchars($rating['gameRating']); ?> placeholder= "/10">
+				<br>
+				<input type="text" name="gameReview" value="<?php echo htmlspecialchars($review['gameReview']); ?> placeholder="Write a review...">
+				<button type="submit">Post Review</button>
+			</form>
+			<!-- show reviews here -->
+			<div class="row">
+			<?php foreach ($review as $gameReviews): ?>
+			</div>
+			<a href="javascript:history.back()" class="btn btn-outline-secondary btn-lg ms-2">Back to Results</a>
+		</div>
 </div>
 </div>
 </div>
