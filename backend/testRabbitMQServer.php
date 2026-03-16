@@ -322,6 +322,13 @@ case "get_user_library":
 	return array("returnCode" => '0', 'message' => "Library is Empty! ");
 	}
 
+	//email noti here
+case "email_status":
+
+
+
+	//email noti end	
+
 case "homepage_data":
 	global $pdo;
 	$sessionKey = $request['session_key'];
