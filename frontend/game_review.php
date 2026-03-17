@@ -10,9 +10,14 @@ if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
 }
 $rating=0;
 $review="";
+if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['gameReview'])) {
+	
+	$client = new rabbitMQClient("../backend/testRabbitMQ.ini", "testServer");
+	$request = array();
+	$request['session_key'] = $_SESSION['session_key'];
+	$request['gameRating'] = $_SESSION['gameRating'];
 
-$client = new rabbitMQClient("../backend/testRabbitMQ.ini", "testServer");
-$request = array();
-$request['session_key'] = $_SESSION['session_key'];
+	$response = $client->send_request($request);
+}
 
 ?>

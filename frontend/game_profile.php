@@ -74,7 +74,7 @@ else {
 				</div>
 			</form>
 			<br>
-			<!-- this section is for writing the review of the game -->
+	<!-- this section is for writing the review of the game -->
 			<form action="game_review.php" method="POST" class="d-inline-block">
 				<label> Write a Review: </label>
 				<input type="number" name="gameRating" value="<?php echo htmlspecialchars($rating['gameRating']); ?> placeholder= "/10">
@@ -82,9 +82,10 @@ else {
 				<input type="text" name="gameReview" value="<?php echo htmlspecialchars($review['gameReview']); ?> placeholder="Write a review...">
 				<button type="submit">Post Review</button>
 			</form>
-			<!-- show reviews here -->
+	<!-- show reviews here -->
 			<div class="row">
 			<?php foreach ($review as $gameReviews): ?>
+			<a href="game_review.php?id=<?php echo $game['gameId']; ?>" class="text-decoration-none text-dark">
 			</div>
 			<a href="javascript:history.back()" class="btn btn-outline-secondary btn-lg ms-2">Back to Results</a>
 		</div>
