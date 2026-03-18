@@ -339,7 +339,54 @@ function requestProcessor($request)
 			$genStmt = $pdo->prepare("SELECT genre_id FROM user_genres WHERE user_id = ?");
 			$genStmt->execute([$userId]);
 			$uGens = $genStmt->fetchAll(PDO::FETCH_COLUMN);
+			
+		case "add_review":
+			global $pdo;
+			$sessionKey = $request['session_key'];
+			$gameId = $request['game_id'];
+			$rating = $request['rating'];
 
+			$getUser = $pdo->prepare("SELECT g.userid FROM reviews WHERE session_id = ?");
+			$getUser->execute([$sessionKey]);
+			$userR = $getUser->fetch(PDO::FETCH_ASSOC);
+			if (!$userR) {
+				return array("returnCode" => '0', 'message' => "Login again please");
+			}
+
+			$userId = $userR['userid'];
+
+			$check = $pdo->prepare("SELECT id FROM reviews WHERE user_id = ? AND game_id = ?");
+			$check->execute([$userId, $gameId]);
+			
+			if ($check->rowCount() > 0) {
+				$update = $pdo->prepare("UPDATE reviews SELECT rating = ?, comment = ? WHERE user_id = ? AND game_id = ?");
+				if ($update->execute([$rating, $comment, $userId, $gameId]){
+					return array("returnCode" => '1', 'message' => "Review updated!");
+				}
+			}	
+			else {
+				$insert = $pdo->prepare("INSERT INTO reviews (user_id, game_id, rating, comment) VALUES (?, ?, ?, ?)");
+				if ($insert->execute([$userId, $gameId, $rating, $comment)) {
+					return array ("returnCode" => '1', 'message' => "Review Added!");
+				}
+			}
+			return array("returnCode" => '0', 'message' => "Error While adding review.(DB)");
+
+		case "get_reviews":
+			global $pdo;
+			$sessionKey = $request['session_key'];
+
+			$stmt = $pdo->prepare("SELECT game_id FROM reviews l JOIN games g ON l.game_id = g.gameId JOIN sessions s ON l.user_id = s.userid WHERE s.session_id = ? ");
+			$stmt->execute([$sessionKey]);
+			$gameReviews = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+			if ($userGames) {
+				return array("returnCode" => '1', 'message' => "Reviews pulled! ", 'data' => $gameReviews);
+			}
+			else {
+				return array("returnCode" => '0', 'message' => "No reviews! ");
+			}
+			//start of homepage cases
 		case "review_data":
 			$searchTerm = $request['query'];
 			$stmt = $pdo->prepare("SELECT gameId as id, title as name, summary, cover_url as cover_image, rating FROM games WHERE title LIKE ?");

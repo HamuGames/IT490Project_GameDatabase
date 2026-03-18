@@ -77,9 +77,9 @@ else {
 	<!-- this section is for writing the review of the game -->
 			<form action="game_review.php" method="POST" class="d-inline-block">
 				<label> Write a Review: </label>
-				<input type="number" name="gameRating" value="<?php echo htmlspecialchars($rating['gameRating']); ?> placeholder= "/10">
+				<input type="number" name="gameReview" value="<?php echo htmlspecialchars($rating['rating']); ?> placeholder= "rate ot of /10">
 				<br>
-				<input type="text" name="gameReview" value="<?php echo htmlspecialchars($review['gameReview']); ?> placeholder="Write a review...">
+				<input type="text" name="gameReview" value="<?php echo htmlspecialchars($comment['comment']); ?> placeholder="Write a review...">
 				<button type="submit">Post Review</button>
 			</form>
 	<!-- show reviews here -->
