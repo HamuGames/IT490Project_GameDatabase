@@ -359,8 +359,8 @@ function requestProcessor($request)
 			$check->execute([$userId, $gameId]);
 			
 			if ($check->rowCount() > 0) {
-				$update = $pdo->prepare("UPDATE reviews SELECT rating = ?, comment = ? WHERE user_id = ? AND game_id = ?");
-				if ($update->execute([$rating, $comment, $userId, $gameId]){
+				$update = $pdo->prepare("UPDATE reviews SET rating = ?, comment = ? WHERE user_id = ? AND game_id = ?");
+				if ($update->execute([$rating, $comment, $userId, $gameId])){
 					return array("returnCode" => '1', 'message' => "Review updated!");
 				}
 			}	
