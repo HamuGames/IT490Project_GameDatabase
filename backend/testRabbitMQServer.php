@@ -374,9 +374,10 @@ function requestProcessor($request)
 
 		case "get_reviews":
 			global $pdo;
-			$sessionKey = $request['session_key'];
+			$stmt = $pdo->prepare("SELECT g.gameId, g.title, g.cover_url, l.status FROM user_library l JOIN games g ON l.game_id = g.gameId JOIN sessions s ON l.user_id = s.userid WHERE s.session_id = ? ");
 
-			$stmt = $pdo->prepare("SELECT game_id FROM reviews l JOIN games g ON l.game_id = g.gameId JOIN sessions s ON l.user_id = s.userid WHERE s.session_id = ? ");
+			$sessionKey = $request['session_key'];
+			$stmt = $pdo->prepare("SELECT comments FROM reviews l");
 			$stmt->execute([$sessionKey]);
 			$gameReviews = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
