@@ -339,7 +339,7 @@ function requestProcessor($request)
 			$genStmt = $pdo->prepare("SELECT genre_id FROM user_genres WHERE user_id = ?");
 			$genStmt->execute([$userId]);
 			$uGens = $genStmt->fetchAll(PDO::FETCH_COLUMN);
-			
+		break;	
 		case "add_review":
 			global $pdo;
 			$sessionKey = $request['session_key'];
