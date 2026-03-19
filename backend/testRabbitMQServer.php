@@ -366,7 +366,7 @@ function requestProcessor($request)
 			}	
 			else {
 				$insert = $pdo->prepare("INSERT INTO reviews (user_id, game_id, rating, comment) VALUES (?, ?, ?, ?)");
-				if ($insert->execute([$userId, $gameId, $rating, $comment)) {
+				if ($insert->execute([$userId, $gameId, $rating, $comment])) {
 					return array ("returnCode" => '1', 'message' => "Review Added!");
 				}
 			}
