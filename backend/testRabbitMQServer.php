@@ -372,7 +372,7 @@ function requestProcessor($request)
 			}
 			return array("returnCode" => '0', 'message' => "Error While adding review.(DB)");
 
-		case "get_reviews":
+		/*case "get_reviews":
 			global $pdo;
 			$stmt = $pdo->prepare("SELECT g.gameId, g.title, g.cover_url, l.status FROM user_library l JOIN games g ON l.game_id = g.gameId JOIN sessions s ON l.user_id = s.userid WHERE s.session_id = ? ");
 
@@ -386,7 +386,7 @@ function requestProcessor($request)
 			}
 			else {
 				return array("returnCode" => '0', 'message' => "No reviews! ");
-			}
+			}*/
 			//start of homepage cases
 		case "review_data":
 			$searchTerm = $request['query'];
