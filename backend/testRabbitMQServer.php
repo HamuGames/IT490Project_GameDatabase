@@ -345,8 +345,9 @@ function requestProcessor($request)
 			$sessionKey = $request['session_key'];
 			$gameId = $request['game_id'];
 			$rating = $request['rating'];
+			$comment = $request['comment'];
 
-			$getUser = $pdo->prepare("SELECT g.userid FROM reviews WHERE session_id = ?");
+			$getUser = $pdo->prepare("SELECT g.userid FROM sessions WHERE session_id = ?");
 			$getUser->execute([$sessionKey]);
 			$userR = $getUser->fetch(PDO::FETCH_ASSOC);
 			if (!$userR) {
