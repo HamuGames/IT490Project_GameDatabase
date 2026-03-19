@@ -11,7 +11,7 @@ if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
 $rating=0;
 $review="";
 
-if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['gameReview'])) {
+if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['review'])) {
 	
 	$client = new rabbitMQClient("../backend/testRabbitMQ.ini", "testServer");
 	$request = array();
