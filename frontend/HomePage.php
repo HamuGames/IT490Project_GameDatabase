@@ -39,12 +39,6 @@ $related = $response['data']['related'] ?? [];
 <div class="container mt-4">
 	<h1 class="display-5 fw-bold mb-4 text-dark">Welcome, <?php echo htmlspecialchars($_SESSION['username']); ?>!</h1>
 <!-- searchbar implementation in page. once working Navigation Bar will not have searchbar inside HomePage ONLY.Instead a nice searchbar in the center.-->
-<section>
-<form>
-	<input type="text" name="searchcategory" placeholder="Search Games...">
-	<button> Search</button>
-</form>
-</section>
 <!--First section of HomePage is For you page. It shows recs based on platforms and genres user chose they like.-->
 <section class="mb-5">
 	<h3 class="text-primary border-bottom pb-2">For You:</h3>
