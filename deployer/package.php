@@ -6,7 +6,7 @@ $versionFolder = "/home/fabdul25/deployment/versions";
 $deploy = parse_ini_file(__DIR__ . '/deployer.ini', true)['database'];
 $db = new mysqli($deploy['host'], $deploy['user'], $deploy['pass'], $deploy['name']);
 
-$result = $db->query("SELECT version FROM packages ORDER BY deploy_date DESC LIMIT 1");
+$result = $db->query("SELECT version FROM packages ORDER BY dateDeployed DESC LIMIT 1");
 $version = "v1.0.0";
 
 if ($row = $result->fetch_assoc()) {
@@ -20,6 +20,9 @@ exec("cd $projectFolder && git checkout main && git pull origin main");
 exec("tar -czf $fileName -C $projectFolder .");
 exec("cd $projectFolder && git checkout Deployment");
 
+$db->query("INSERT INTO packages (version, path, status, environment) VALUES ('$version', '$fileName', 'pending', 'na')");
+
 echo "New Version v$version has been created in $versionFolder\n";
+
 
 ?>
