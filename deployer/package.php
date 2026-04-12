@@ -22,7 +22,7 @@ exec("cd $projectFolder && git checkout Deployment");
 
 $db->query("INSERT INTO packages (version, path, status, environment) VALUES ('$version', '$fileName', 'pending', 'na')");
 
-echo "New Version v$version has been created in $versionFolder\n";
+echo "New Version $version has been created in $versionFolder\n";
 
 
 ?>
