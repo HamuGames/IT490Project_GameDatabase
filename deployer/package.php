@@ -11,7 +11,7 @@ $version = "v1.0.0";
 
 if ($row = $result->fetch_assoc()) {
 	$num = explode('.', ltrim($row['version'], 'v'));
-	$nums[2]++;
+	$num[2]++;
 	$version = "v" . implode('.', $num);
 }
 $fileName = "$versionFolder/$version.tar.gz";
