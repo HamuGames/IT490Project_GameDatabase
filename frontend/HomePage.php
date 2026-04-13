@@ -69,7 +69,7 @@ $related = $response['data']['related'] ?? [];
 </section>
 	<?php if ($libGame): ?>
 <section class="mb-5">
-	<h3 class="text-success border-bottom pb-2">Because you liked: <?php echo htmlspecialchars($libGame['title']); ?></h3>
+	<h3 class="text-info border-bottom pb-2">Because you liked: <?php echo htmlspecialchars($libGame['title']); ?></h3>
 <div class="row mt-3">
 	<?php if (empty($related)): ?>
 <div class="col-12"><p class="text-muted">No related games found yet.</p></div>
