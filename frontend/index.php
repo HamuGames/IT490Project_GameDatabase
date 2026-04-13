@@ -57,7 +57,7 @@ function SendLoginRequest(username,password)
 <div class="container mt-5">
 <div class="row justify-content-center">
 <div class="gamer-card col-md-4 card p-4 shadow-sm">
-<h2 class="text-center mb-4">login page</h2>
+<h2 class="text-center mb-4">THIS PAGE IS BROKEN</h2>
 <form>
 <div class="mb-3">
 	<label class=="form-label">UserName</label>
