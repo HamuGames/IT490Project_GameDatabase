@@ -252,8 +252,10 @@ if (!$token) {
 	    $stmt = $pdo->prepare("SELECT g.*, GROUP_CONCAT(p.name SEPARATOR ', ') as platform_list FROM games g LEFT JOIN game_platforms gp ON g.gameId = gp.game_id LEFT JOIN platforms p ON gp.platform_id = p.platformId WHERE g.gameId = ? GROUP BY g.gameId");
 	    $stmt->execute([$gameId]);
 	    $data = $stmt->fetch(PDO::FETCH_ASSOC);
-
 	    if ($data) {
+		$link = $pdo->prepare("SELECT storeName, url FROM gameLinks WHERE gameId = ?");
+		$link->execute([$gameId]);
+		$data['storeLinks'] = $link->fetchAll(PDO::FETCH_ASSOC);
 		    return array("returnCode" => '1', 'message' => "Data harvesting successful", 'data' => $data);
 	    }
 	    else {

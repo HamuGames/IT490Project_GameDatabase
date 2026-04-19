@@ -27,7 +27,7 @@ function harvestUpcomingGames($pdo, $client_id, $access_token, $user_platforms =
         $where .= " & genres = (" . implode(',', $user_genres) . ")";
 	}
 
-	$query = 'fields id, name, summary, cover.image_id, rating, first_release_date, genres, platforms; where ' . $where . '; sort first_release_date asc; limit 4;';
+	$query = 'fields id, name, summary, cover.image_id, rating, first_release_date, genres, platforms, external_games.url, external_games.category; where ' . $where . '; sort first_release_date asc; limit 4;';
 	$ch = curl_init('https://api.igdb.com/v4/games');
 	curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
 	curl_setopt($ch, CURLOPT_HTTPHEADER, [
@@ -44,8 +44,9 @@ function harvestUpcomingGames($pdo, $client_id, $access_token, $user_platforms =
 	if (empty($games)) return [];
 
 	$stmt = $pdo->prepare("INSERT IGNORE INTO games (gameId, title, summary, cover_url, rating, release_date) VALUES (?, ?, ?, ?, ?, FROM_UNIXTIME(?))");
-    $genremap = $pdo->prepare("INSERT IGNORE INTO game_genres (game_id, genre_id) VALUES (?, ?)");
-    $platformmap = $pdo->prepare("INSERT IGNORE INTO game_platforms (game_id, platform_id) VALUES (?, ?)");
+	$genremap = $pdo->prepare("INSERT IGNORE INTO game_genres (game_id, genre_id) VALUES (?, ?)");
+	$platformmap = $pdo->prepare("INSERT IGNORE INTO game_platforms (game_id, platform_id) VALUES (?, ?)");
+	$linkmap = $pdo->prepare("INSERT IGNORE INTO gameLinks (gameId, storeName, url) VALUES (?,?,?)");
 
     foreach ($games as $game) {
         $stmt->execute([
@@ -57,14 +58,48 @@ function harvestUpcomingGames($pdo, $client_id, $access_token, $user_platforms =
         }
         if (isset($game['platforms']) && is_array($game['platforms'])) {
             foreach ($game['platforms'] as $platformId) { $platformmap->execute([$game['id'], $platformId]); }
+	}
+	if (isset($game['external_games']) && is_array($game['external_games'])) {
+		foreach ($game['external_games'] as $x) {
+			if (!isset($x['url'])) continue;
+			$url = strtolower($x['url']);
+			$storeName = null;
+
+
+          if (strpos($url, 'steampowered') !== false) {
+            $storeName = 'Steam';
+        } elseif (strpos($url, 'playstation.com') !== false) {
+            $storeName = 'PlayStation Store';
+        } elseif (strpos($url, 'xbox.com') !== false || strpos($url, 'microsoft.com') !== false) {
+            $storeName = 'Microsoft Store';
+        } elseif (strpos($url, 'epicgames.com') !== false) {
+            $storeName = 'Epic Games';
+        } elseif (strpos($url, 'nintendo.com') !== false) {
+            $storeName = 'Nintendo eShop';
+        } elseif (strpos($url, 'gog.com') !== false) {
+            $storeName = 'GOG';
+        } elseif (strpos($url, 'apple.com') !== false) {
+            $storeName = 'Apple App Store';
+        } elseif (strpos($url, 'play.google.com') !== false) {
+            $storeName = 'Google Play Store';
+        }elseif (strpos($url, 'nintendo') !== false) {
+            $storeName = 'eShop';
         }
+
+
+			if ($storeName === null) {
+			continue;
+			}
+			$linkmap->execute([$game['id'], $storeName, $x['url']]);
+		}
+	}
     }
     return $games;
 }
 //
 function harvestGameData($search_query, $pdo, $client_id, $access_token) {
 
-	$query = 'fields id, name, summary, cover.image_id, rating, first_release_date, genres, platforms; search "' . $search_query . '"; where (rating > 60 | total_rating_count > 5) & cover != null; limit 12;';
+	$query = 'fields id, name, summary, cover.image_id, rating, first_release_date, genres, platforms, external_games.url, external_games.category; search "' . $search_query . '"; where (rating > 60 | total_rating_count > 5) & cover != null; limit 12;';
 
 	$ch = curl_init('https://api.igdb.com/v4/games');
 	curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
@@ -86,6 +121,7 @@ VALUES (?, ?, ?, ?, ?, FROM_UNIXTIME(?))
 ");
 	$genremap = $pdo->prepare("INSERT IGNORE INTO game_genres (game_id, genre_id) VALUES (?, ?)");
 	$platformmap = $pdo->prepare("INSERT IGNORE INTO game_platforms (game_id, platform_id) VALUES (?, ?)");
+	$linkmap = $pdo->prepare("INSERT IGNORE INTO gameLinks (gameId, storeName, url) VALUES (?,?,?)");
 	
 foreach ($games as $game) {
 	$stmt->execute([
@@ -104,7 +140,44 @@ if (isset($game['platforms']) && is_array($game['platforms'])) {
                 foreach ($game['platforms'] as $platformId) {
              $platformmap->execute([$game['id'], $platformId]);
                 }
+}
+
+if (isset($game['external_games']) && is_array($game['external_games'])) {
+                foreach ($game['external_games'] as $x) {
+                        if (!isset($x['url'])) continue;
+			$url = strtolower($x['url']);
+			$storeName = null;
+
+
+          if (strpos($url, 'steampowered') !== false) {
+            $storeName = 'Steam';
+        } elseif (strpos($url, 'playstation.com') !== false) {
+            $storeName = 'PlayStation Store';
+        } elseif (strpos($url, 'xbox.com') !== false || strpos($url, 'microsoft.com') !== false) {
+            $storeName = 'Microsoft Store';
+        } elseif (strpos($url, 'epicgames.com') !== false) {
+            $storeName = 'Epic Games';
+        } elseif (strpos($url, 'nintendo.com') !== false) {
+            $storeName = 'Nintendo eShop';
+        } elseif (strpos($url, 'gog.com') !== false) {
+            $storeName = 'GOG';
+        } elseif (strpos($url, 'apple.com') !== false) {
+            $storeName = 'Apple App Store';
+        } elseif (strpos($url, 'play.google.com') !== false) {
+            $storeName = 'Google Play Store';
+        }elseif (strpos($url, 'nintendo') !== false) {
+            $storeName = 'eShop';
         }
+
+
+                        if ($storeName === null) {
+                        continue;
+                        }
+                        $linkmap->execute([$game['id'], $storeName, $x['url']]);
+                }
+
+        }
+
 }
 return $games;
 }
