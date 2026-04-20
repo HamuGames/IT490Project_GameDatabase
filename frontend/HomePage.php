@@ -38,6 +38,10 @@ $related = $response['data']['related'] ?? [];
 <?php include('navBar.php'); ?>
 <div class="container mt-4">
 	<h1 class="display-5 fw-bold mb-4 text-dark">Welcome, <?php echo htmlspecialchars($_SESSION['username']); ?>!</h1>
+	<a href="FriendsLibrary.php" class="btn btn-success btn-lg">
+		Friends Library
+	</a>
+</div>
 <!-- searchbar implementation in page. once working Navigation Bar will not have searchbar inside HomePage ONLY.Instead a nice searchbar in the center.-->
 <section>
 <form>
