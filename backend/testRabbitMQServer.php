@@ -323,6 +323,113 @@ case "get_user_library":
 	}
 
 	//email noti here
+case "add_friend":
+	global $pdo;
+	$sessionKey = $request['session_key'] ?? '';
+	$friendUsername = trim($request['friend_username'] ?? '');
+
+	if ($friendUsername === '') {
+		return array("returnCode" => '0', 'message' => "Friend username is required");
+	}
+
+	$getUser = $pdo->prepare("SELECT userid FROM sessions WHERE session_id = ?");
+	$getUser->execute([$sessionKey]);
+	$userR = $getUser->fetch(PDO::FETCH_ASSOC);
+	if (!$userR) {
+		return array("returnCode" => '0', 'message' => "Session expired. Please login again.");
+	}
+	$userId = (int)$userR['userid'];
+
+	$friendStmt = $pdo->prepare("SELECT id FROM users WHERE LOWER(username) = LOWER(?)");
+	$friendStmt->execute([$friendUsername]);
+	$friendRow = $friendStmt->fetch(PDO::FETCH_ASSOC);
+
+	if (!$friendRow) {
+		return array("returnCode" => '0', 'message' => "User not found");
+	}
+
+	$friendId = (int)$friendRow['id'];
+	if ($friendId === $userId) {
+		return array("returnCode" => '0', 'message' => "You cannot add yourself as a friend");
+	}
+
+	$createTable = $pdo->exec("CREATE TABLE IF NOT EXISTS user_friends (
+		id INT NOT NULL AUTO_INCREMENT,
+		user_id INT NOT NULL,
+		friend_id INT NOT NULL,
+		created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+		PRIMARY KEY (id),
+		UNIQUE KEY unique_friendship (user_id, friend_id),
+		CONSTRAINT fk_user_friends_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+		CONSTRAINT fk_user_friends_friend FOREIGN KEY (friend_id) REFERENCES users(id) ON DELETE CASCADE
+	) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+
+	$insertFriend = $pdo->prepare("INSERT IGNORE INTO user_friends (user_id, friend_id) VALUES (?, ?)");
+	$insertFriend->execute([$userId, $friendId]);
+	$insertFriend->execute([$friendId, $userId]);
+
+	if ($insertFriend->rowCount() > 0) {
+		return array("returnCode" => '1', 'message' => "Friend added successfully");
+	}
+
+	return array("returnCode" => '0', 'message' => "You are already friends with this user");
+
+case "get_friends_library":
+	global $pdo;
+	$sessionKey = $request['session_key'] ?? '';
+
+	$getUser = $pdo->prepare("SELECT userid FROM sessions WHERE session_id = ?");
+	$getUser->execute([$sessionKey]);
+	$userR = $getUser->fetch(PDO::FETCH_ASSOC);
+	if (!$userR) {
+		return array("returnCode" => '0', 'message' => "Session expired. Please login again.");
+	}
+	$userId = (int)$userR['userid'];
+
+	$pdo->exec("CREATE TABLE IF NOT EXISTS user_friends (
+		id INT NOT NULL AUTO_INCREMENT,
+		user_id INT NOT NULL,
+		friend_id INT NOT NULL,
+		created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+		PRIMARY KEY (id),
+		UNIQUE KEY unique_friendship (user_id, friend_id),
+		CONSTRAINT fk_user_friends_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+		CONSTRAINT fk_user_friends_friend FOREIGN KEY (friend_id) REFERENCES users(id) ON DELETE CASCADE
+	) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+
+	$friendsStmt = $pdo->prepare("SELECT
+		u.username,
+		COALESCE(COUNT(DISTINCT ul.game_id), 0) AS game_count,
+		COALESCE(MAX(CASE WHEN ul.status = 'playing' THEN g.title END), MAX(g.title), 'No games yet') AS favorite_game,
+		GROUP_CONCAT(DISTINCT g.title ORDER BY g.title SEPARATOR '||') AS games_csv
+	FROM user_friends uf
+	JOIN users u ON u.id = uf.friend_id
+	LEFT JOIN user_library ul ON ul.user_id = u.id
+	LEFT JOIN games g ON g.gameId = ul.game_id
+	WHERE uf.user_id = ?
+	GROUP BY u.id, u.username
+	ORDER BY u.username ASC");
+	$friendsStmt->execute([$userId]);
+	$rows = $friendsStmt->fetchAll(PDO::FETCH_ASSOC);
+
+	$data = [];
+	foreach ($rows as $row) {
+		$games = [];
+		if (!empty($row['games_csv'])) {
+			$games = array_slice(explode('||', $row['games_csv']), 0, 5);
+		}
+
+		$data[] = [
+			'username' => $row['username'],
+			'status' => 'Friend',
+			'favorite_game' => $row['favorite_game'],
+			'games' => $games,
+			'count' => (int)$row['game_count']
+		];
+	}
+
+	return array("returnCode" => '1', 'message' => "Friends loaded", 'data' => $data);
+
 case "email_status":
 
 

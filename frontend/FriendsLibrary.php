@@ -1,35 +1,54 @@
 <?php
 session_start();
 
+require_once('../backend/path.inc');
+require_once('../backend/get_host_info.inc');
+require_once('../backend/rabbitMQLib.inc');
+
 if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
     header("Location: index.php");
     exit(0);
 }
 
-/* MOCK DATA (replace with backend later) */
-$friends = [
-    [
-        'username' => 'PixelKnight',
-        'status' => 'Online',
-        'favorite_game' => 'Elden Ring',
-        'games' => ['Elden Ring', 'Hades', 'Helldivers 2'],
-        'count' => 42
-    ],
-    [
-        'username' => 'ShadowMage',
-        'status' => 'Offline',
-        'favorite_game' => 'Baldur\'s Gate 3',
-        'games' => ['BG3', 'Cyberpunk', 'Hollow Knight'],
-        'count' => 27
-    ],
-    [
-        'username' => 'RetroFox',
-        'status' => 'Online',
-        'favorite_game' => 'Stardew Valley',
-        'games' => ['Stardew Valley', 'Celeste', 'Dead Cells'],
-        'count' => 58
-    ]
+$friends = [];
+$flashType = '';
+$flashMessage = '';
+
+$client = new rabbitMQClient("../backend/testRabbitMQ.ini", "testServer");
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['type'] ?? '') === 'add_friend') {
+    $friendUsername = trim($_POST['friend_username'] ?? '');
+
+    if ($friendUsername === '') {
+        $flashType = 'danger';
+        $flashMessage = 'Please enter a username.';
+    } else {
+        $addRequest = [
+            'type' => 'add_friend',
+            'session_key' => $_SESSION['session_key'],
+            'friend_username' => $friendUsername
+        ];
+
+        $addResponse = $client->send_request($addRequest);
+        if (isset($addResponse['returnCode']) && $addResponse['returnCode'] === '1') {
+            $flashType = 'success';
+            $flashMessage = $addResponse['message'] ?? 'Friend added.';
+        } else {
+            $flashType = 'danger';
+            $flashMessage = $addResponse['message'] ?? 'Could not add friend.';
+        }
+    }
+}
+
+$listRequest = [
+    'type' => 'get_friends_library',
+    'session_key' => $_SESSION['session_key']
 ];
+
+$listResponse = $client->send_request($listRequest);
+if (isset($listResponse['returnCode']) && $listResponse['returnCode'] === '1' && !empty($listResponse['data'])) {
+    $friends = $listResponse['data'];
+}
 ?>
 
 <!DOCTYPE html>
@@ -49,13 +68,8 @@ $friends = [
             transform: translateY(-5px);
         }
 
-        .status-online {
-            background: #198754;
-            color: white;
-        }
-
-        .status-offline {
-            background: #6c757d;
+        .status-friend {
+            background: #0d6efd;
             color: white;
         }
 
@@ -78,6 +92,28 @@ $friends = [
 
     <h1 class="mb-4 fw-bold">Friends Library</h1>
 
+    <?php if ($flashMessage !== ''): ?>
+        <div class="alert alert-<?php echo htmlspecialchars($flashType); ?>">
+            <?php echo htmlspecialchars($flashMessage); ?>
+        </div>
+    <?php endif; ?>
+
+    <form method="POST" class="row g-2 mb-3">
+        <input type="hidden" name="type" value="add_friend">
+        <div class="col-md-9">
+            <input
+                type="text"
+                name="friend_username"
+                class="form-control"
+                placeholder="Enter username to add"
+                required
+            >
+        </div>
+        <div class="col-md-3 d-grid">
+            <button type="submit" class="btn btn-success">Add Friend</button>
+        </div>
+    </form>
+
     <!-- Search -->
     <input type="text" id="search" class="form-control mb-4" placeholder="Search friends...">
 
@@ -85,7 +121,7 @@ $friends = [
 
         <?php foreach ($friends as $f): ?>
             <div class="col-md-4 mb-4 friend-item"
-                 data-name="<?php echo strtolower($f['username']); ?>">
+                 data-name="<?php echo htmlspecialchars(strtolower($f['username'])); ?>">
 
                 <div class="card friend-card shadow-sm p-3">
 
@@ -93,9 +129,8 @@ $friends = [
                         <?php echo htmlspecialchars($f['username']); ?>
                     </h5>
 
-                    <span class="badge mb-2
-                        <?php echo $f['status'] === 'Online' ? 'status-online' : 'status-offline'; ?>">
-                        <?php echo $f['status']; ?>
+                    <span class="badge mb-2 status-friend">
+                        <?php echo htmlspecialchars($f['status']); ?>
                     </span>
 
                     <p class="mb-1">
@@ -109,14 +144,13 @@ $friends = [
                     </p>
 
                     <div class="mb-3">
+                        <?php if (empty($f['games'])): ?>
+                            <span class="text-muted small">No shared library data yet.</span>
+                        <?php endif; ?>
                         <?php foreach ($f['games'] as $g): ?>
                             <span class="game-pill"><?php echo htmlspecialchars($g); ?></span>
                         <?php endforeach; ?>
                     </div>
-
-                    <button class="btn btn-primary w-100">
-                        View Full Library
-                    </button>
 
                 </div>
             </div>
@@ -124,8 +158,8 @@ $friends = [
 
     </div>
 
-    <div id="empty" class="alert alert-warning text-center d-none">
-        No results found.
+    <div id="empty" class="alert alert-warning text-center <?php echo empty($friends) ? '' : 'd-none'; ?>">
+        <?php echo empty($friends) ? 'No friends added yet. Add a username above.' : 'No results found.'; ?>
     </div>
 
 </div>
