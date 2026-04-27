@@ -4,7 +4,7 @@ require_once('config.php');
 $log = ('smsNotifications.log');
 $currentTime = time();
 
-$pdo = new PDO("mysql:host=$db_host;dbname = $db_name;charset=utf8mb4", $dbuser, $db_pass);
+$pdo = new PDO("mysql:host=$db_host;dbname=$db_name;charset=utf8mb4", $db_user, $db_pass);
 $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
 function sendSMS($phone_number, $message, $telnyx_api_key) {
