@@ -51,6 +51,7 @@ CREATE TABLE `users` (
   `id` int NOT NULL AUTO_INCREMENT,
   `username` varchar(100) NOT NULL,
   `email` varchar(255) NOT NULL,
+  `phone` varchar(255),
   `password` varchar(255) NOT NULL,
   `firstname` varchar(100) NOT NULL,
   `lastname` varchar(100) NOT NULL,
@@ -129,6 +130,7 @@ CREATE TABLE `user_library` (
 	`game_id` int NOT NULL,
 	`status` enum('watchlist', 'playing', 'completed', 'dropped') DEFAULT 'watchlist',
 	`email` TINYINT(1) DEFAULT 0,
+	`sms` TINYINT(1) DEFAULT 0,
 	PRIMARY KEY (`id`),
 	FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON DELETE CASCADE,
 	FOREIGN KEY (`game_id`) REFERENCES `games`(`gameId`) ON DELETE CASCADE) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
@@ -170,7 +172,7 @@ INSERT IGNORE INTO genres (genreId, name) VALUES
 
 LOCK TABLES `users` WRITE;
 /*!40000 ALTER TABLE `users` DISABLE KEYS */;
-INSERT INTO `users` VALUES (10,'test','test@gmail.com','$2y$10$MIUOWDd24abc1atnAQ3Xm.b0Jeljc10fXakGvsdgODpkLGgcPzTou','test','test','2026-02-24 20:24:18'),(11,'Arghavan123','ak123@gmail.com','$2y$10$SalDwrBjTs2qO86lfLrTUerNnfhCtQvoRmKv4O.IwE0yUMNNskrHi','Arghavn','Katebi','2026-02-24 20:24:18');
+-- INSERT INTO `users` VALUES (10,'test','test@gmail.com','$2y$10$MIUOWDd24abc1atnAQ3Xm.b0Jeljc10fXakGvsdgODpkLGgcPzTou','test','test','2026-02-24 20:24:18'),(11,'Arghavan123','ak123@gmail.com','$2y$10$SalDwrBjTs2qO86lfLrTUerNnfhCtQvoRmKv4O.IwE0yUMNNskrHi','Arghavn','Katebi','2026-02-24 20:24:18');
 /*!40000 ALTER TABLE `users` ENABLE KEYS */;
 UNLOCK TABLES;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
