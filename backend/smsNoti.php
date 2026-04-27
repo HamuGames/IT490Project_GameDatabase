@@ -32,7 +32,7 @@ function pendingNoti($pdo, $currentTime) {
         FROM user_library ul
         JOIN users u ON ul.user_id = u.id
         JOIN games g ON ul.game_id = g.gameId
-        WHERE ul.ststus = 'watchlist'
+        WHERE ul.status = 'watchlist'
             AND ul.sms = 0
             AND g.release_date <= FROM_UNIXTIME(?)";
     $stmt = $pdo ->prepare($sql);
