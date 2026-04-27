@@ -24,6 +24,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['type'] ?? '') === 'add_fri
     if ($friendUsername === '') {
         $flashType = 'danger';
         $flashMessage = 'Please enter a username.';
+    } else if (!isset($_SESSION['session_key']) || empty($_SESSION['session_key'])) {
+        $flashType = 'danger';
+        $flashMessage = 'Session error: Please log in again.';
     } else {
         $addRequest = [
             'type' => 'add_friend',
@@ -32,12 +35,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['type'] ?? '') === 'add_fri
         ];
 
         $addResponse = $client->send_request($addRequest);
+        
+        // Debug: log response
+        error_log("Add friend response: " . json_encode($addResponse));
+        
         if (isset($addResponse['returnCode']) && $addResponse['returnCode'] === '1') {
             $flashType = 'success';
-            $flashMessage = $addResponse['message'] ?? 'Friend added.';
+            $flashMessage = $addResponse['message'] ?? 'Friend added successfully!';
         } else {
             $flashType = 'danger';
-            $flashMessage = $addResponse['message'] ?? 'Could not add friend.';
+            // Show exact backend error message
+            $flashMessage = $addResponse['message'] ?? 'Failed to add friend. Please try again.';
         }
     }
 }
@@ -46,15 +54,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['user_search'])) {
     $searchUsersInput = trim($_GET['user_search']);
 
     if ($searchUsersInput !== '') {
-        $userSearchRequest = [
-            'type' => 'search_users',
-            'session_key' => $_SESSION['session_key'],
-            'query' => $searchUsersInput
-        ];
+        if (!isset($_SESSION['session_key']) || empty($_SESSION['session_key'])) {
+            $flashType = 'danger';
+            $flashMessage = 'Session error: Please log in again.';
+        } else {
+            $userSearchRequest = [
+                'type' => 'search_users',
+                'session_key' => $_SESSION['session_key'],
+                'query' => $searchUsersInput
+            ];
 
-        $userSearchResponse = $client->send_request($userSearchRequest);
-        if (isset($userSearchResponse['returnCode']) && $userSearchResponse['returnCode'] === '1' && !empty($userSearchResponse['data'])) {
-            $userResults = $userSearchResponse['data'];
+            $userSearchResponse = $client->send_request($userSearchRequest);
+            
+            // Debug: log response
+            error_log("Search users response: " . json_encode($userSearchResponse));
+            
+            if (isset($userSearchResponse['returnCode']) && $userSearchResponse['returnCode'] === '1' && !empty($userSearchResponse['data'])) {
+                $userResults = $userSearchResponse['data'];
+            }
         }
     }
 }
@@ -110,6 +127,15 @@ if (isset($listResponse['returnCode']) && $listResponse['returnCode'] === '1' &&
 <div class="container mt-5">
 
     <h1 class="mb-4 fw-bold">Friends Library</h1>
+
+    <!-- Debug Panel -->
+    <div class="card mb-3 bg-light border-secondary" style="font-size: 12px;">
+        <div class="card-body">
+            <strong>Debug Info:</strong><br>
+            Session Key: <?php echo isset($_SESSION['session_key']) && !empty($_SESSION['session_key']) ? 'SET ✓' : 'NOT SET ✗'; ?><br>
+            Username: <?php echo isset($_SESSION['username']) ? htmlspecialchars($_SESSION['username']) : 'N/A'; ?><br>
+        </div>
+    </div>
 
     <?php if ($flashMessage !== ''): ?>
         <div class="alert alert-<?php echo htmlspecialchars($flashType); ?>">

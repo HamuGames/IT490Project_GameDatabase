@@ -332,47 +332,54 @@ case "add_friend":
 		return array("returnCode" => '0', 'message' => "Friend username is required");
 	}
 
-	$getUser = $pdo->prepare("SELECT userid FROM sessions WHERE session_id = ?");
-	$getUser->execute([$sessionKey]);
-	$userR = $getUser->fetch(PDO::FETCH_ASSOC);
-	if (!$userR) {
-		return array("returnCode" => '0', 'message' => "Session expired. Please login again.");
-	}
-	$userId = (int)$userR['userid'];
+	try {
+		$getUser = $pdo->prepare("SELECT userid FROM sessions WHERE session_id = ?");
+		$getUser->execute([$sessionKey]);
+		$userR = $getUser->fetch(PDO::FETCH_ASSOC);
+		if (!$userR) {
+			return array("returnCode" => '0', 'message' => "Session expired. Please login again.");
+		}
+		$userId = (int)$userR['userid'];
 
-	$friendStmt = $pdo->prepare("SELECT id FROM users WHERE LOWER(username) = LOWER(?)");
-	$friendStmt->execute([$friendUsername]);
-	$friendRow = $friendStmt->fetch(PDO::FETCH_ASSOC);
+		$friendStmt = $pdo->prepare("SELECT id FROM users WHERE LOWER(username) = LOWER(?)");
+		$friendStmt->execute([$friendUsername]);
+		$friendRow = $friendStmt->fetch(PDO::FETCH_ASSOC);
 
-	if (!$friendRow) {
-		return array("returnCode" => '0', 'message' => "User not found");
-	}
+		if (!$friendRow) {
+			return array("returnCode" => '0', 'message' => "User not found");
+		}
 
-	$friendId = (int)$friendRow['id'];
-	if ($friendId === $userId) {
-		return array("returnCode" => '0', 'message' => "You cannot add yourself as a friend");
-	}
+		$friendId = (int)$friendRow['id'];
+		if ($friendId === $userId) {
+			return array("returnCode" => '0', 'message' => "You cannot add yourself as a friend");
+		}
 
-	$createTable = $pdo->exec("CREATE TABLE IF NOT EXISTS user_friends (
-		id INT NOT NULL AUTO_INCREMENT,
-		user_id INT NOT NULL,
-		friend_id INT NOT NULL,
-		created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-		PRIMARY KEY (id),
-		UNIQUE KEY unique_friendship (user_id, friend_id),
-		CONSTRAINT fk_user_friends_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
-		CONSTRAINT fk_user_friends_friend FOREIGN KEY (friend_id) REFERENCES users(id) ON DELETE CASCADE
-	) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+		$pdo->exec("CREATE TABLE IF NOT EXISTS user_friends (
+			id INT NOT NULL AUTO_INCREMENT,
+			user_id INT NOT NULL,
+			friend_id INT NOT NULL,
+			created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+			PRIMARY KEY (id),
+			UNIQUE KEY unique_friendship (user_id, friend_id),
+			FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+			FOREIGN KEY (friend_id) REFERENCES users(id) ON DELETE CASCADE
+		) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
 
-	$insertFriend = $pdo->prepare("INSERT IGNORE INTO user_friends (user_id, friend_id) VALUES (?, ?)");
-	$insertFriend->execute([$userId, $friendId]);
-	$insertFriend->execute([$friendId, $userId]);
+		$checkFriends = $pdo->prepare("SELECT id FROM user_friends WHERE user_id = ? AND friend_id = ?");
+		$checkFriends->execute([$userId, $friendId]);
+		if ($checkFriends->fetch()) {
+			return array("returnCode" => '0', 'message' => "You are already friends with this user");
+		}
 
-	if ($insertFriend->rowCount() > 0) {
+		$insertFriend = $pdo->prepare("INSERT INTO user_friends (user_id, friend_id) VALUES (?, ?)");
+		$insertFriend->execute([$userId, $friendId]);
+		$insertFriend->execute([$friendId, $userId]);
+
 		return array("returnCode" => '1', 'message' => "Friend added successfully");
-	}
 
-	return array("returnCode" => '0', 'message' => "You are already friends with this user");
+	} catch (Exception $e) {
+		return array("returnCode" => '0', 'message' => "Database error: " . $e->getMessage());
+	}
 
 case "get_friends_library":
 	global $pdo;
