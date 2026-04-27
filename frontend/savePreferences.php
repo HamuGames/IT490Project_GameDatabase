@@ -24,6 +24,12 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     if (isset($response['returnCode']) && $response['returnCode'] == '1') {
         $_SESSION['pref_mess'] = "Preferences saved!";
         $_SESSION['pref_mess_type'] = "success";
+	if (isset($_SESSION['new_registration']) && $_SESSION['new_registration'] === true) {
+		unset($_SESSION['new_registration']); 
+		header("Location: HomePage.php");
+		exit();
+	}
+    
     } else {
         $_SESSION['pref_mess'] = $response['message'] ?? "Failed to save preferences.";
         $_SESSION['pref_mess_type'] = "danger";

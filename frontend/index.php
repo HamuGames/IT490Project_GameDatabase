@@ -8,15 +8,6 @@ if (isset($_SESSION['logged_in']) && $_SESSION['logged_in'] === true) {
 <html>
 <script>
 
-///function HandleLoginResponse(response)
-///{
-///	console.log("SERVER: '", response, "'");
-///		var text = JSON.parse(response);
-// document.getElementById("textResponse").innerHTML = response+"<p>";     
-      //  document.getElementById("textResponse").innerHTML = "response: "+text+"<p>";
-///alert("MESSAGE: " + text.message);
-///	document.getElementById("textResponse").innerHTML = text.message;
-///}
 function HandleLoginResponse(response)
 {
     console.log("SERVER RAW RESPONSE:", response); 
@@ -27,14 +18,13 @@ function HandleLoginResponse(response)
 
     try {
         var text = JSON.parse(response);
-        //alert("SUCCESS! MESSAGE: " + text.message);
 	    if (text.status === true) {
 		    window.location.href = "HomePage.php";}
 	    else {
 		    document.getElementById("textResponse").innerHTML = "<b style='color:red;'>" + text.message + "</b>";
 	    }
     } catch (e) {
-        alert("CRASH! The server sent invalid JSON. Check the Console (F12) to see what it sent.");
+        alert("Server Error.");
         console.error("The invalid response was:", response);
     }
 }
@@ -51,9 +41,6 @@ function SendLoginRequest(username,password)
 			console.log("RESPONSE: ", this.responseText);
 			HandleLoginResponse(this.responseText);
 		}
-	//	else{
-	//		alert("Server error: " + this.status);
-	//	}
 	}
 	request.send("type=login&username="+username+"&password="+password);
 }
@@ -62,14 +49,15 @@ function SendLoginRequest(username,password)
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css"
           rel="stylesheet"
           integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC"
-          crossorigin="anonymous">
+	  crossorigin="anonymous">
 <link href="css/main.css" rel="stylesheet">
+
 </head>
-<body class="bg-light">
+<body class="gamer-background">
 <div class="container mt-5">
 <div class="row justify-content-center">
-<div class="col-md-4 card p-4 shadow-sm">
-<h2 class="text-center mb-4">login page</h2>
+<div class="gamer-card col-md-4 card p-4 shadow-sm">
+<h2 class="text-center mb-4">THIS PAGE IS BROKEN</h2>
 <form>
 <div class="mb-3">
 	<label class=="form-label">UserName</label>

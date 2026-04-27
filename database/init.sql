@@ -128,6 +128,7 @@ CREATE TABLE `user_library` (
 	`user_id` int NOT NULL,
 	`game_id` int NOT NULL,
 	`status` enum('watchlist', 'playing', 'completed', 'dropped') DEFAULT 'watchlist',
+	`email` TINYINT(1) DEFAULT 0,
 	PRIMARY KEY (`id`),
 	FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON DELETE CASCADE,
 	FOREIGN KEY (`game_id`) REFERENCES `games`(`gameId`) ON DELETE CASCADE) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
