@@ -430,6 +430,47 @@ case "get_friends_library":
 
 	return array("returnCode" => '1', 'message' => "Friends loaded", 'data' => $data);
 
+case "search_users":
+	global $pdo;
+	$sessionKey = $request['session_key'] ?? '';
+	$query = trim($request['query'] ?? '');
+
+	if ($query === '') {
+		return array("returnCode" => '1', 'message' => "No query", 'data' => []);
+	}
+
+	$getUser = $pdo->prepare("SELECT userid FROM sessions WHERE session_id = ?");
+	$getUser->execute([$sessionKey]);
+	$userR = $getUser->fetch(PDO::FETCH_ASSOC);
+	if (!$userR) {
+		return array("returnCode" => '0', 'message' => "Session expired. Please login again.");
+	}
+	$userId = (int)$userR['userid'];
+
+	$pdo->exec("CREATE TABLE IF NOT EXISTS user_friends (
+		id INT NOT NULL AUTO_INCREMENT,
+		user_id INT NOT NULL,
+		friend_id INT NOT NULL,
+		created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+		PRIMARY KEY (id),
+		UNIQUE KEY unique_friendship (user_id, friend_id),
+		CONSTRAINT fk_user_friends_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+		CONSTRAINT fk_user_friends_friend FOREIGN KEY (friend_id) REFERENCES users(id) ON DELETE CASCADE
+	) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+
+	$searchStmt = $pdo->prepare("SELECT u.id, u.username
+	FROM users u
+	LEFT JOIN user_friends uf ON uf.user_id = ? AND uf.friend_id = u.id
+	WHERE u.id != ?
+	AND uf.id IS NULL
+	AND LOWER(u.username) LIKE LOWER(?)
+	ORDER BY u.username ASC
+	LIMIT 15");
+	$searchStmt->execute([$userId, $userId, "%$query%"]);
+	$rows = $searchStmt->fetchAll(PDO::FETCH_ASSOC);
+
+	return array("returnCode" => '1', 'message' => "Users found", 'data' => $rows);
+
 case "email_status":
 
 

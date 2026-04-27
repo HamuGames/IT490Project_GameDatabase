@@ -11,6 +11,8 @@ if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
 }
 
 $friends = [];
+$userResults = [];
+$searchUsersInput = '';
 $flashType = '';
 $flashMessage = '';
 
@@ -36,6 +38,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['type'] ?? '') === 'add_fri
         } else {
             $flashType = 'danger';
             $flashMessage = $addResponse['message'] ?? 'Could not add friend.';
+        }
+    }
+}
+
+if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['user_search'])) {
+    $searchUsersInput = trim($_GET['user_search']);
+
+    if ($searchUsersInput !== '') {
+        $userSearchRequest = [
+            'type' => 'search_users',
+            'session_key' => $_SESSION['session_key'],
+            'query' => $searchUsersInput
+        ];
+
+        $userSearchResponse = $client->send_request($userSearchRequest);
+        if (isset($userSearchResponse['returnCode']) && $userSearchResponse['returnCode'] === '1' && !empty($userSearchResponse['data'])) {
+            $userResults = $userSearchResponse['data'];
         }
     }
 }
@@ -113,6 +132,43 @@ if (isset($listResponse['returnCode']) && $listResponse['returnCode'] === '1' &&
             <button type="submit" class="btn btn-success">Add Friend</button>
         </div>
     </form>
+
+    <form method="GET" class="row g-2 mb-3">
+        <div class="col-md-9">
+            <input
+                type="text"
+                name="user_search"
+                class="form-control"
+                placeholder="Find users in database"
+                value="<?php echo htmlspecialchars($searchUsersInput); ?>"
+            >
+        </div>
+        <div class="col-md-3 d-grid">
+            <button type="submit" class="btn btn-outline-primary">Find People</button>
+        </div>
+    </form>
+
+    <?php if ($searchUsersInput !== ''): ?>
+        <div class="card mb-4 shadow-sm">
+            <div class="card-header bg-white fw-bold">Search Results</div>
+            <div class="list-group list-group-flush">
+                <?php if (empty($userResults)): ?>
+                    <div class="list-group-item text-muted">No users found.</div>
+                <?php else: ?>
+                    <?php foreach ($userResults as $u): ?>
+                        <div class="list-group-item d-flex justify-content-between align-items-center">
+                            <span><?php echo htmlspecialchars($u['username']); ?></span>
+                            <form method="POST" class="m-0">
+                                <input type="hidden" name="type" value="add_friend">
+                                <input type="hidden" name="friend_username" value="<?php echo htmlspecialchars($u['username']); ?>">
+                                <button type="submit" class="btn btn-sm btn-success">Add</button>
+                            </form>
+                        </div>
+                    <?php endforeach; ?>
+                <?php endif; ?>
+            </div>
+        </div>
+    <?php endif; ?>
 
     <!-- Search -->
     <input type="text" id="search" class="form-control mb-4" placeholder="Search friends...">
