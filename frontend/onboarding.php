@@ -30,6 +30,7 @@ $evryGenre = $response['data']['all_genres'] ?? [];
 <html>
 <!--THIS PAGE IS ONLY ACCESSED ONCE after user clicks REGISTER. does the same as change preferences but it looks more like a part of registration than settings page. -->
 <head>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Game Preferences - GAMERS DUNGEON</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
