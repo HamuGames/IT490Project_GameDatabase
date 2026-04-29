@@ -23,7 +23,7 @@
 
       <ul class="navbar-nav ms-3">
         <li class="nav-item">
-          <a class="nav-link fs-5" href="FriendsLibrary.php">Friends Library</a>
+          <a class="btn btn-success" href="FriendsLibrary.php">Friends Library</a>
         </li>
       </ul>
 
