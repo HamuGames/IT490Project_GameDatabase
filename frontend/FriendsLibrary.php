@@ -16,8 +16,6 @@ $searchUsersInput = '';
 $flashType = '';
 $flashMessage = '';
 
-$client = new rabbitMQClient("../backend/testRabbitMQ.ini", "testServer");
-
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['type'] ?? '') === 'add_friend') {
     $friendUsername = trim($_POST['friend_username'] ?? '');
 
@@ -32,9 +30,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['type'] ?? '') === 'add_fri
             'type' => 'add_friend',
             'session_key' => $_SESSION['session_key'],
             'friend_username' => $friendUsername
-        ];
-
-        $addResponse = $client->send_request($addRequest);
+	];
+	$addClient = new rabbitMQClient("../backend/testRabbitMQ.ini", "testServer");
+	$addResponse = $addClient->send_request($addRequest);
         
         // Debug: log response
         error_log("Add friend response: " . json_encode($addResponse));
@@ -63,8 +61,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['user_search'])) {
                 'session_key' => $_SESSION['session_key'],
                 'query' => $searchUsersInput
             ];
-
-            $userSearchResponse = $client->send_request($userSearchRequest);
+	    $searchClient = new rabbitMQClient("../backend/testRabbitMQ.ini", "testServer");
+            $userSearchResponse = $searchClient->send_request($userSearchRequest);
             
             // Debug: log response
             error_log("Search users response: " . json_encode($userSearchResponse));
@@ -80,8 +78,8 @@ $listRequest = [
     'type' => 'get_friends_library',
     'session_key' => $_SESSION['session_key']
 ];
-
-$listResponse = $client->send_request($listRequest);
+$listClient = new rabbitMQClient("../backend/testRabbitMQ.ini", "testServer");
+$listResponse = $listClient->send_request($listRequest);
 if (isset($listResponse['returnCode']) && $listResponse['returnCode'] === '1' && !empty($listResponse['data'])) {
     $friends = $listResponse['data'];
 }

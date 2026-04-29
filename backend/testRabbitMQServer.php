@@ -136,7 +136,8 @@ function requestProcessor($request)
 	if(!isset($request['type']))
   {
     return "ERROR: unsupported message type";
-  }
+	}
+	try {
   switch ($request['type'])
   {
     case "login":
@@ -356,17 +357,6 @@ case "add_friend":
 			return array("returnCode" => '0', 'message' => "You cannot add yourself as a friend");
 		}
 
-		$pdo->exec("CREATE TABLE IF NOT EXISTS user_friends (
-			id INT NOT NULL AUTO_INCREMENT,
-			user_id INT NOT NULL,
-			friend_id INT NOT NULL,
-			created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-			PRIMARY KEY (id),
-			UNIQUE KEY unique_friendship (user_id, friend_id),
-			FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
-			FOREIGN KEY (friend_id) REFERENCES users(id) ON DELETE CASCADE
-		) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
-
 		$checkFriends = $pdo->prepare("SELECT id FROM user_friends WHERE user_id = ? AND friend_id = ?");
 		$checkFriends->execute([$userId, $friendId]);
 		if ($checkFriends->fetch()) {
@@ -394,17 +384,6 @@ case "get_friends_library":
 		return array("returnCode" => '0', 'message' => "Session expired. Please login again.");
 	}
 	$userId = (int)$userR['userid'];
-
-	$pdo->exec("CREATE TABLE IF NOT EXISTS user_friends (
-		id INT NOT NULL AUTO_INCREMENT,
-		user_id INT NOT NULL,
-		friend_id INT NOT NULL,
-		created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-		PRIMARY KEY (id),
-		UNIQUE KEY unique_friendship (user_id, friend_id),
-		CONSTRAINT fk_user_friends_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
-		CONSTRAINT fk_user_friends_friend FOREIGN KEY (friend_id) REFERENCES users(id) ON DELETE CASCADE
-	) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
 
 	$friendsStmt = $pdo->prepare("SELECT
 		u.username,
@@ -455,18 +434,6 @@ case "search_users":
 		return array("returnCode" => '0', 'message' => "Session expired. Please login again.");
 	}
 	$userId = (int)$userR['userid'];
-
-	$pdo->exec("CREATE TABLE IF NOT EXISTS user_friends (
-		id INT NOT NULL AUTO_INCREMENT,
-		user_id INT NOT NULL,
-		friend_id INT NOT NULL,
-		created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-		PRIMARY KEY (id),
-		UNIQUE KEY unique_friendship (user_id, friend_id),
-		CONSTRAINT fk_user_friends_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
-		CONSTRAINT fk_user_friends_friend FOREIGN KEY (friend_id) REFERENCES users(id) ON DELETE CASCADE
-	) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
-
 	$searchStmt = $pdo->prepare("SELECT u.id, u.username
 	FROM users u
 	LEFT JOIN user_friends uf ON uf.user_id = ? AND uf.friend_id = u.id
@@ -562,6 +529,11 @@ return array("returnCode" => '1', "data" => [
   return array("returnCode" => '0', 'message'=>"Server received request and processed");
 
 }
+catch (\Throwable $e) {
+	$errorMsg = "BACKEND: " . $e->getMessage() . " om line " . $e->getLine();
+	echo $errorMsg . PHP_EOL;
+	return array("returnCode" => '0', 'message' => $errorMsg);
+}}
 
 $server = new rabbitMQServer("testRabbitMQ.ini","testServer");
 

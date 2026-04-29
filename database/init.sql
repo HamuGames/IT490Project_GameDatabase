@@ -130,6 +130,18 @@ CREATE TABLE IF NOT EXISTS `user_library` (
 	FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON DELETE CASCADE,
 	FOREIGN KEY (`game_id`) REFERENCES `games`(`gameId`) ON DELETE CASCADE) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
+DROP TABLE IF EXISTS `user_friends`;
+CREATE TABLE `user_friends` (
+	`id` int NOT NULL AUTO_INCREMENT,
+	`user_id` int NOT NULL,
+	`friend_id` int NOT NULL,
+	`created_at` timestamp DEFAULT CURRENT_TIMESTAMP,
+	PRIMARY KEY (`id`),
+	UNIQUE KEY `unique_friendship` (`user_id`,`friend_id`),
+	FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON DELETE CASCADE,
+	FOREIGN KEY (`friend_id`) REFERENCES `users`(`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
 DROP TABLE IF EXISTS `reviews`;
 CREATE TABLE `reviews` (
 	`id` int NOT NULL AUTO_INCREMENT,
