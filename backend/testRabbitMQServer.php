@@ -136,7 +136,8 @@ function requestProcessor($request)
 	if(!isset($request['type']))
   {
     return "ERROR: unsupported message type";
-  }
+	}
+	try {
   switch ($request['type'])
   {
     case "login":
@@ -325,6 +326,127 @@ case "get_user_library":
 	}
 
 	//email noti here
+case "add_friend":
+	global $pdo;
+	$sessionKey = $request['session_key'] ?? '';
+	$friendUsername = trim($request['friend_username'] ?? '');
+
+	if ($friendUsername === '') {
+		return array("returnCode" => '0', 'message' => "Friend username is required");
+	}
+
+	try {
+		$getUser = $pdo->prepare("SELECT userid FROM sessions WHERE session_id = ?");
+		$getUser->execute([$sessionKey]);
+		$userR = $getUser->fetch(PDO::FETCH_ASSOC);
+		if (!$userR) {
+			return array("returnCode" => '0', 'message' => "Session expired. Please login again.");
+		}
+		$userId = (int)$userR['userid'];
+
+		$friendStmt = $pdo->prepare("SELECT id FROM users WHERE LOWER(username) = LOWER(?)");
+		$friendStmt->execute([$friendUsername]);
+		$friendRow = $friendStmt->fetch(PDO::FETCH_ASSOC);
+
+		if (!$friendRow) {
+			return array("returnCode" => '0', 'message' => "User not found");
+		}
+
+		$friendId = (int)$friendRow['id'];
+		if ($friendId === $userId) {
+			return array("returnCode" => '0', 'message' => "You cannot add yourself as a friend");
+		}
+
+		$checkFriends = $pdo->prepare("SELECT id FROM user_friends WHERE user_id = ? AND friend_id = ?");
+		$checkFriends->execute([$userId, $friendId]);
+		if ($checkFriends->fetch()) {
+			return array("returnCode" => '0', 'message' => "You are already friends with this user");
+		}
+
+		$insertFriend = $pdo->prepare("INSERT INTO user_friends (user_id, friend_id) VALUES (?, ?)");
+		$insertFriend->execute([$userId, $friendId]);
+		$insertFriend->execute([$friendId, $userId]);
+
+		return array("returnCode" => '1', 'message' => "Friend added successfully");
+
+	} catch (Exception $e) {
+		return array("returnCode" => '0', 'message' => "Database error: " . $e->getMessage());
+	}
+
+case "get_friends_library":
+	global $pdo;
+	$sessionKey = $request['session_key'] ?? '';
+
+	$getUser = $pdo->prepare("SELECT userid FROM sessions WHERE session_id = ?");
+	$getUser->execute([$sessionKey]);
+	$userR = $getUser->fetch(PDO::FETCH_ASSOC);
+	if (!$userR) {
+		return array("returnCode" => '0', 'message' => "Session expired. Please login again.");
+	}
+	$userId = (int)$userR['userid'];
+
+	$friendsStmt = $pdo->prepare("SELECT
+		u.username,
+		COALESCE(COUNT(DISTINCT ul.game_id), 0) AS game_count,
+		COALESCE(MAX(CASE WHEN ul.status = 'playing' THEN g.title END), MAX(g.title), 'No games yet') AS favorite_game,
+		GROUP_CONCAT(DISTINCT g.title ORDER BY g.title SEPARATOR '||') AS games_csv
+	FROM user_friends uf
+	JOIN users u ON u.id = uf.friend_id
+	LEFT JOIN user_library ul ON ul.user_id = u.id
+	LEFT JOIN games g ON g.gameId = ul.game_id
+	WHERE uf.user_id = ?
+	GROUP BY u.id, u.username
+	ORDER BY u.username ASC");
+	$friendsStmt->execute([$userId]);
+	$rows = $friendsStmt->fetchAll(PDO::FETCH_ASSOC);
+
+	$data = [];
+	foreach ($rows as $row) {
+		$games = [];
+		if (!empty($row['games_csv'])) {
+			$games = array_slice(explode('||', $row['games_csv']), 0, 5);
+		}
+
+		$data[] = [
+			'username' => $row['username'],
+			'status' => 'Friend',
+			'favorite_game' => $row['favorite_game'],
+			'games' => $games,
+			'count' => (int)$row['game_count']
+		];
+	}
+
+	return array("returnCode" => '1', 'message' => "Friends loaded", 'data' => $data);
+
+case "search_users":
+	global $pdo;
+	$sessionKey = $request['session_key'] ?? '';
+	$query = trim($request['query'] ?? '');
+
+	if ($query === '') {
+		return array("returnCode" => '1', 'message' => "No query", 'data' => []);
+	}
+
+	$getUser = $pdo->prepare("SELECT userid FROM sessions WHERE session_id = ?");
+	$getUser->execute([$sessionKey]);
+	$userR = $getUser->fetch(PDO::FETCH_ASSOC);
+	if (!$userR) {
+		return array("returnCode" => '0', 'message' => "Session expired. Please login again.");
+	}
+	$userId = (int)$userR['userid'];
+	$searchStmt = $pdo->prepare("SELECT u.id, u.username
+	FROM users u
+	LEFT JOIN user_friends uf ON uf.user_id = ? AND uf.friend_id = u.id
+	WHERE u.id != ?
+	AND uf.id IS NULL
+	AND LOWER(u.username) LIKE LOWER(?)
+	ORDER BY u.username ASC
+	LIMIT 15");
+	$searchStmt->execute([$userId, $userId, "%$query%"]);
+	$rows = $searchStmt->fetchAll(PDO::FETCH_ASSOC);
+
+	return array("returnCode" => '1', 'message' => "Users found", 'data' => $rows);
+
 case "email_status":
 
 
@@ -407,6 +529,11 @@ return array("returnCode" => '1', "data" => [
   return array("returnCode" => '0', 'message'=>"Server received request and processed");
 
 }
+catch (\Throwable $e) {
+	$errorMsg = "BACKEND: " . $e->getMessage() . " om line " . $e->getLine();
+	echo $errorMsg . PHP_EOL;
+	return array("returnCode" => '0', 'message' => $errorMsg);
+}}
 
 $server = new rabbitMQServer("testRabbitMQ.ini","testServer");
 
