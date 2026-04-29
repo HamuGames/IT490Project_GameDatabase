@@ -63,6 +63,19 @@ else {
 <h4>Description:</h4>
 <p class="lead text-secondary"><?php echo htmlspecialchars($game['summary']); ?></p>
 <p class="text-white"><strong>Available on:</strong> <?php echo htmlspecialchars($game['platform_list'] ?? 'N/A'); ?></p>
+<?php if (!empty($game['storeLinks'])): ?>
+<div class="mb-4">
+<h5 class="text-white">External Links: </h5>
+<div class="d-flex flex-wrap gap-2">
+<?php foreach ($game['storeLinks'] as $link): ?>
+<a href="<?php echo htmlspecialchars($link['url']); ?>" target="_blank" class="btn btn-outline-info btn-sm shadow-sm">
+<?php echo htmlspecialchars($link['storeName']); ?>
+</a>
+<?php endforeach; ?>
+</div>
+</div>
+<?php endif; ?>
+
 <div class="mt-5">
     <form action="userLibrary.php" method="POST" class="d-inline-block">
         <input type="hidden" name="game_id" value="<?php echo htmlspecialchars($game['gameId']); ?>">
