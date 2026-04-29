@@ -45,6 +45,7 @@ CREATE TABLE IF NOT EXISTS `users` (
   `id` int NOT NULL AUTO_INCREMENT,
   `username` varchar(100) NOT NULL,
   `email` varchar(255) NOT NULL,
+  `phone` varchar(255),
   `password` varchar(255) NOT NULL,
   `firstname` varchar(100) NOT NULL,
   `lastname` varchar(100) NOT NULL,
@@ -124,6 +125,7 @@ CREATE TABLE IF NOT EXISTS `user_library` (
 	`game_id` int NOT NULL,
 	`status` enum('watchlist', 'playing', 'completed', 'dropped') DEFAULT 'watchlist',
 	`email` TINYINT(1) DEFAULT 0,
+	`sms` TINYINT(1) DEFAULT 0,
 	PRIMARY KEY (`id`),
 	FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON DELETE CASCADE,
 	FOREIGN KEY (`game_id`) REFERENCES `games`(`gameId`) ON DELETE CASCADE) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;

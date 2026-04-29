@@ -24,5 +24,5 @@ $db->query("INSERT INTO packages (version, path, status, environment) VALUES ('$
 
 echo "New Version $version has been created in $versionFolder\n";
 
-
+$db->close();
 ?>

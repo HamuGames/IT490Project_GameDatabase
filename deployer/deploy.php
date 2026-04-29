@@ -42,4 +42,6 @@ $db->query("UPDATE packages SET status = 'deployed', environment = '$env' WHERE 
 
 echo "Well Done, Version $version has been deployed to $env successfully!\n";
 
+$db->close();
+
 ?>

@@ -73,7 +73,7 @@ if ($mydb->connect_error){
 	return array("status" => true, "message" => "Session terminated in Database");
 }
 
-function register($fName,$lName,$email,$username,$password)
+function register($fName,$lName,$email,$phone,$username,$password)
 {
 global $db_host, $db_user, $db_pass, $db_name;
 
@@ -101,8 +101,8 @@ if ($stmt->fetch()) {
 
 	$hash = password_hash($password, PASSWORD_DEFAULT);
 
-	$createUser = $mydb->prepare("INSERT INTO users (firstname, lastname, email, username, password) VALUES (?, ?, ?, ?, ?)");
-	$createUser->bind_param("sssss", $fName, $lName, $email, $username, $hash);
+	$createUser = $mydb->prepare("INSERT INTO users (firstname, lastname, email, phone, username, password) VALUES (?, ?, ?, ?, ?, ?)");
+	$createUser->bind_param("ssssss", $fName, $lName, $email, $phone, $username, $hash);
 
 	if ($createUser->execute()) {
 		$userid = $mydb->insert_id;
@@ -144,7 +144,7 @@ function requestProcessor($request)
     case "register":
 	    $test_hash = password_hash($request['password'], PASSWORD_DEFAULT);
 	    echo "Hashed: " .  $test_hash . PHP_EOL;
-	    return register($request['fName'],$request['lName'],$request['email'],$request['username'],$request['password']);
+	    return register($request['fName'],$request['lName'],$request['email'],$request['phone'],$request['username'],$request['password']);
 	    //user preferences start
 	    
     case "get_preferences":
