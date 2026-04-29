@@ -85,7 +85,7 @@ function SendRegisterRequest(fName, lName, email, phone, username, password)
 <input type="password" class="form-control" id="password" placeholder"New Password" required><br>
 </div>
 <div class="d-grid gap-2">	
-<button class="btn btn-primary" type="button" onclick="SendRegisterRequest(document.getElementById('fName').value,document.getElementById('lName').value,document.getElementById('email').value,document.getElementById('phone'),document.getElementById('username').value,document.getElementById('password').value);">Register Now</button><br>
+<button class="btn btn-primary" type="button" onclick="SendRegisterRequest(document.getElementById('fName').value,document.getElementById('lName').value,document.getElementById('email').value,document.getElementById('phone').value,document.getElementById('username').value,document.getElementById('password').value);">Register Now</button><br>
 </div>
 <div class="alert alert-info text-center" id="textResponse">
 </div>
