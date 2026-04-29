@@ -20,7 +20,11 @@
         <input class="form-control me-2" type="search" name="search_query" placeholder="Search for a game..." required>
         <button class="btn btn-outline-success" type="submit">Search</button>
       </form>
-      
+     <ul class="navbar-nav ms-3">
+	<li class="nav-item">
+	 <a class="nav-link fs-5" href="FriendsLibrary.php">Friends Library</a>
+	</li>
+     </ul> 
       <ul class="navbar-nav ms-4">
 	<li class="nav-item">
 <!--logout button takes user back to index, removes their current session as well.-->
