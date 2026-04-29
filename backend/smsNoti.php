@@ -27,7 +27,15 @@ function sendSMS($phone_number, $telnyx_sender_id, $message, $telnyx_api_key) {
 
     $response = curl_exec($ch);
     curl_close($ch);
+
     $data = json_decode($response, true);
+
+    if (isset($data['errors'])) {
+	    echo "\nTELNIX API ERROR:\n";
+	    echo $telnyx_api_key . "\n";
+	    echo json_encode($data['errors'], JSON_PRETTY_PRINT) . "\n\n\n";
+	    return false;
+    }
     return $data['data']['id'] ?? null;
 }
 function pendingNoti($pdo, $currentTime) {
@@ -54,7 +62,7 @@ $pendingNoti = pendingNoti($pdo, $currentTime);
 
 foreach ($pendingNoti as $row) {
     $phone = $row['phone'];
-    $message = "Hello, " . $row['username'] . "!\n\nYour WatchListed Game " . $row['title'] . " has now released! How about you go and give it a try? You may also change the status of your game to 'playing' in your library! \n\n Best, \n Gamers Dungeon";
+    $message = "Hello, " . $row['username'] . "!\n\n This message is to let you know that your watchlisted game " . $row['title'] . " has now released! How about you go and give it a try? You may also change the status of your game to 'playing' in your library! ";
     if(sendSMS($phone, $telnyx_sender_id, $message, $telnyx_api_key)) {
         $update = $pdo->prepare("UPDATE user_library SET sms = 1 Where user_id = ? AND game_id = ?");
         $update->execute([$row['user_id'], $row['game_id']]);
