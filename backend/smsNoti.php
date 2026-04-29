@@ -68,9 +68,9 @@ foreach ($pendingNoti as $row) {
         $update->execute([$row['user_id'], $row['game_id']]);
 
         $logTime = date('Y-m-d H:i:s');
-        $logEntry = "[$logTime] SUCCESS: SMS SENT TO {$row['phone']} for '{$row['title']}' (User ID: {$row['user_id']})\n";
+        $logEntry = "[$logTime] SUCCESS: SMS SENT TO {$row['phone']}" . " for '{$row['title']}' (User ID: {$row['user_id']})\n";
         file_put_contents($log, $logEntry, FILE_APPEND);
-        echo "SMS has been sent to " . $row['phone'] . "for" . $row['title'] . "\n";
+        echo "SMS has been sent to " . $row['phone'] . " for " . $row['title'] . "\n";
     }
 
     else {
