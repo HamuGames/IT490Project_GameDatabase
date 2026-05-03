@@ -43,7 +43,7 @@ $loggedUser = $_SESSION['username'];
 				}
 			}
 		}
-		request.send("type=sendCode&User" + username + "&Method=" + method);
+		request.send("type=sendCode&username" + username + "&Method=" + method);
 	}
 
 	function verifyCode() {
@@ -63,9 +63,9 @@ $loggedUser = $_SESSION['username'];
 				}
 			}
 		}
-		request.send("type=verifyCode&User" + username + "&Code=" + code);
+		request.send("type=verifyCode&username" + username + "&Code=" + code);
 	}
-</script
+</script>
 </head>
 <body class="gamer-background">
 <div class="container mt-5">

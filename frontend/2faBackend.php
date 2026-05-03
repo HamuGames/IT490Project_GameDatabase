@@ -26,11 +26,11 @@ if ($_POST['type'] === "sendCode") {
 	$request['method'] = $_POST['Method'];
 }
 if ($_POST['type'] === "verifyCode") {
-	$request['code'] = $_POST['Code'};
+	$request['code'] = $_POST['Code'];
 }
 $response = $client->send_request($request);
 
-if ($_POST['type'] === "verifyCode" && isset($response['status']) && $response['status'] === true {
+if ($_POST['type'] === "verifyCode" && isset($response['status']) && $response['status'] === true) {
 	$_SESSION['logged_in'] = true;
 	unset($_SESSION['authentication']);
 }

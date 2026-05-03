@@ -215,7 +215,7 @@ $platStmt = $pdo->prepare("INSERT INTO user_platforms (user_id, platform_id) VAL
 	   $username = $request['username'];
 	   $method = $request['method'];
 
-	   $stmt = $pdo->prepare("SELECT id FROM users WHERE username = ?");
+	   $stmt = $pdo->prepare("SELECT id, email, phone, firstname FROM users WHERE username = ?");
 	   $stmt->execute([$username]);
 	   $user = $stmt->fetch(PDO::FETCH_ASSOC);
 
@@ -235,7 +235,7 @@ $platStmt = $pdo->prepare("INSERT INTO user_platforms (user_id, platform_id) VAL
 	if ($insert->execute([$userId, $code])) {
 		$email = $user['email'];
 		$phone = $user['phone'];
-		$name = $user['firstName'];
+		$name = $user['firstname'];
 
 		if ($method === 'sms') {
 			$messageData = json_encode([
@@ -271,7 +271,7 @@ $platStmt = $pdo->prepare("INSERT INTO user_platforms (user_id, platform_id) VAL
 		  $username = $request['username'];
 		  $code = $request['code'];
 
-		  $stmt = $pdo->prepare("SELECT id FROM users WHERE username = ?");
+		  $stmt = $pdo->prepare("SELECT id, email, phone, firstname FROM users WHERE username = ?");
 		  $stmt->execute([$username]);
 		  $user = $stmt->fetch(PDO::FETCH_ASSOC);
 
