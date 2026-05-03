@@ -19,7 +19,7 @@ function HandleLoginResponse(response)
     try {
         var text = JSON.parse(response);
 	    if (text.status === true) {
-		    window.location.href = "HomePage.php";}
+		    window.location.href = "authentication.php";}
 	    else {
 		    document.getElementById("textResponse").innerHTML = "<b style='color:red;'>" + text.message + "</b>";
 	    }
