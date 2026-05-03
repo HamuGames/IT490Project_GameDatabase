@@ -209,7 +209,100 @@ $platStmt = $pdo->prepare("INSERT INTO user_platforms (user_id, platform_id) VAL
    $pdo->commit();
   return array("returnCode" => '1', "message" => "Preferences saved.");
     
-    
+	//2fa starts hereee
+
+   case "sendCode":
+	   $username = $request['username'];
+	   $method = $request['method'];
+
+	   $stmt = $pdo->prepare("SELECT id FROM users WHERE username = ?");
+	   $stmt->execute([$username]);
+	   $user = $stmt->fetch(PDO::FETCH_ASSOC);
+
+	   if (!$user) {
+	   	return array("status" => false, "message" => "User not found");
+	   }
+	   $userId = $user['id'];
+
+	   $code = (string) random_int(100000, 999999);
+
+	   $insert = $pdo-> prepare("
+		INSERT INTO user2fa (id, code, exp) 
+		VALUES (?, ?, DATE_ADD(NOW(), INTERVAL 15 MINUTE))
+		ON DUPLICATE KEY UPDATE
+		code = VALUES(code), exp = VALUES(exp)");
+
+	if ($insert->execute([$userId, $code])) {
+		$email = $user['email'];
+		$phone = $user['phone'];
+		$name = $user['firstName'];
+
+		if ($method === 'sms') {
+			$messageData = json_encode([
+				'from' => $telnyx_sender_id,
+				'to' => $phone,
+				'text' => "Hey, $name, your login code is: " . $code . ". It will expire in 15 minutes."
+			]);
+			$ch = curl_init('https://api.telnyx.com/v2/messages');
+			curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+   			curl_setopt($ch, CURLOPT_POST, true);
+    			curl_setopt($ch, CURLOPT_POSTFIELDS, $messageData);
+    			curl_setopt($ch, CURLOPT_HTTPHEADER, [
+        			'Authorization: Bearer ' . $telnyx_api_key,
+        			'content-type: application/json',
+        			'Accept: application/json'
+			]);
+			$apiResponse = curl_exec($ch);
+			curl_close($ch);
+		} else {
+			$subject = "Your 2FA Login Code";
+			$message = "Hey $name, your login code is: " . $code . ". It will expire in 15 minutes.";
+			$headers = "From: it490.gamersdungeon@gmail.com";
+
+			mail($email, $subject, $message, $headers);
+		}
+		return array("status" => true, "message" => "Code generated and sent.");
+	} else {
+		return array("status" => false, "message" => "Error generating code");
+	}
+	   break;
+
+	  case "verifyCode":
+		  $username = $request['username'];
+		  $code = $request['code'];
+
+		  $stmt = $pdo->prepare("SELECT id FROM users WHERE username = ?");
+		  $stmt->execute([$username]);
+		  $user = $stmt->fetch(PDO::FETCH_ASSOC);
+
+		  if (!$user) {
+		  	return array("status" => false, "message" => "User not found");
+		  }
+		  $id = $user['id'];
+
+		  $verify = $pdo->prepare("
+			SELECT * FROM user2fa
+			WHERE id = ? AND code = ? AND exp > NOW()
+			");
+		$verify->execute([$id, $code]);
+		$match = $verify->fetch(PDO::FETCH_ASSOC);
+
+		if ($match) {
+			$delete = $pdo->prepare("
+				DELETE FROM user2fa
+				WHERE id = ?
+				");
+			$delete->execute([$id]);
+			return array("status" => true, "message" => "Successful!");
+		} else {
+			return array("status" => false, "message" => "Invalid or Expired Code");
+		}
+		break;
+
+	
+	// 2fa ends hereee
+
+
     case "logout":
 	    return logout($request['session_key']);
     case "validate_session":

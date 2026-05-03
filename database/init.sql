@@ -16,12 +16,131 @@
 /*!40111 SET @OLD_SQL_NOTES=@@SQL_NOTES, SQL_NOTES=0 */;
 
 --
+-- Table structure for table `gameLinks`
+--
+
+DROP TABLE IF EXISTS `gameLinks`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `gameLinks` (
+  `gameId` int NOT NULL,
+  `storeName` varchar(50) DEFAULT NULL,
+  `url` varchar(255) NOT NULL,
+  PRIMARY KEY (`gameId`,`url`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `game_genres`
+--
+
+DROP TABLE IF EXISTS `game_genres`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `game_genres` (
+  `game_id` int NOT NULL,
+  `genre_id` int NOT NULL,
+  PRIMARY KEY (`game_id`,`genre_id`),
+  KEY `genre_id` (`genre_id`),
+  CONSTRAINT `game_genres_ibfk_1` FOREIGN KEY (`game_id`) REFERENCES `games` (`gameId`) ON DELETE CASCADE,
+  CONSTRAINT `game_genres_ibfk_2` FOREIGN KEY (`genre_id`) REFERENCES `genres` (`genreId`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `game_platforms`
+--
+
+DROP TABLE IF EXISTS `game_platforms`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `game_platforms` (
+  `game_id` int NOT NULL,
+  `platform_id` int NOT NULL,
+  PRIMARY KEY (`game_id`,`platform_id`),
+  KEY `platform_id` (`platform_id`),
+  CONSTRAINT `game_platforms_ibfk_1` FOREIGN KEY (`game_id`) REFERENCES `games` (`gameId`) ON DELETE CASCADE,
+  CONSTRAINT `game_platforms_ibfk_2` FOREIGN KEY (`platform_id`) REFERENCES `platforms` (`platformId`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `games`
+--
+
+DROP TABLE IF EXISTS `games`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `games` (
+  `gameId` int NOT NULL,
+  `title` varchar(255) NOT NULL,
+  `summary` text,
+  `cover_url` varchar(255) DEFAULT NULL,
+  `rating` decimal(5,2) DEFAULT NULL,
+  `release_date` date DEFAULT NULL,
+  PRIMARY KEY (`gameId`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `genres`
+--
+
+DROP TABLE IF EXISTS `genres`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `genres` (
+  `genreId` int NOT NULL,
+  `name` varchar(100) NOT NULL,
+  PRIMARY KEY (`genreId`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `platforms`
+--
+
+DROP TABLE IF EXISTS `platforms`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `platforms` (
+  `platformId` int NOT NULL,
+  `name` varchar(100) NOT NULL,
+  PRIMARY KEY (`platformId`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `reviews`
+--
+
+DROP TABLE IF EXISTS `reviews`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `reviews` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `user_id` int NOT NULL,
+  `game_id` int NOT NULL,
+  `rating` int DEFAULT NULL,
+  `comment` text,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `user_id` (`user_id`),
+  KEY `game_id` (`game_id`),
+  CONSTRAINT `reviews_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `reviews_ibfk_2` FOREIGN KEY (`game_id`) REFERENCES `games` (`gameId`) ON DELETE CASCADE,
+  CONSTRAINT `reviews_chk_1` CHECK ((`rating` between 1 and 10))
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
 -- Table structure for table `sessions`
 --
 
+DROP TABLE IF EXISTS `sessions`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE IF NOT EXISTS `sessions` (
+CREATE TABLE `sessions` (
   `userid` int NOT NULL,
   `session_id` varchar(255) NOT NULL,
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
@@ -30,22 +149,109 @@ CREATE TABLE IF NOT EXISTS `sessions` (
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
--- Dumping data for table `sessions`
+-- Table structure for table `user2fa`
 --
 
+DROP TABLE IF EXISTS `user2fa`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `user2fa` (
+  `id` int NOT NULL,
+  `code` varchar(6) NOT NULL,
+  `exp` datetime NOT NULL,
+  PRIMARY KEY (`id`),
+  CONSTRAINT `user2fa_ibfk_1` FOREIGN KEY (`id`) REFERENCES `users` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `user_friends`
+--
+
+DROP TABLE IF EXISTS `user_friends`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `user_friends` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `user_id` int NOT NULL,
+  `friend_id` int NOT NULL,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `unique_friendship` (`user_id`,`friend_id`),
+  KEY `friend_id` (`friend_id`),
+  CONSTRAINT `user_friends_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `user_friends_ibfk_2` FOREIGN KEY (`friend_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `user_genres`
+--
+
+DROP TABLE IF EXISTS `user_genres`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `user_genres` (
+  `user_id` int NOT NULL,
+  `genre_id` int NOT NULL,
+  PRIMARY KEY (`user_id`,`genre_id`),
+  KEY `genre_id` (`genre_id`),
+  CONSTRAINT `user_genres_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `user_genres_ibfk_2` FOREIGN KEY (`genre_id`) REFERENCES `genres` (`genreId`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `user_library`
+--
+
+DROP TABLE IF EXISTS `user_library`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `user_library` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `user_id` int NOT NULL,
+  `game_id` int NOT NULL,
+  `status` enum('watchlist','playing','completed','dropped') DEFAULT 'watchlist',
+  `email` tinyint(1) DEFAULT '0',
+  `sms` tinyint(1) DEFAULT '0',
+  PRIMARY KEY (`id`),
+  KEY `user_id` (`user_id`),
+  KEY `game_id` (`game_id`),
+  CONSTRAINT `user_library_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `user_library_ibfk_2` FOREIGN KEY (`game_id`) REFERENCES `games` (`gameId`) ON DELETE CASCADE
+) ENGINE=InnoDB AUTO_INCREMENT=8 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `user_platforms`
+--
+
+DROP TABLE IF EXISTS `user_platforms`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `user_platforms` (
+  `user_id` int NOT NULL,
+  `platform_id` int NOT NULL,
+  PRIMARY KEY (`user_id`,`platform_id`),
+  KEY `platform_id` (`platform_id`),
+  CONSTRAINT `user_platforms_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `user_platforms_ibfk_2` FOREIGN KEY (`platform_id`) REFERENCES `platforms` (`platformId`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
 
 --
 -- Table structure for table `users`
 --
 
--- DROP TABLE IF EXISTS `users`;
+DROP TABLE IF EXISTS `users`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE IF NOT EXISTS `users` (
+CREATE TABLE `users` (
   `id` int NOT NULL AUTO_INCREMENT,
   `username` varchar(100) NOT NULL,
   `email` varchar(255) NOT NULL,
-  `phone` varchar(255),
+  `phone` varchar(255) DEFAULT NULL,
   `password` varchar(255) NOT NULL,
   `firstname` varchar(100) NOT NULL,
   `lastname` varchar(100) NOT NULL,
@@ -53,142 +259,9 @@ CREATE TABLE IF NOT EXISTS `users` (
   PRIMARY KEY (`id`),
   UNIQUE KEY `username` (`username`),
   UNIQUE KEY `email` (`email`)
-) ENGINE=InnoDB AUTO_INCREMENT=12 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=17 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
-
-
--- DROP TABLE IF EXISTS `games`;
-CREATE TABLE IF NOT EXISTS `games` (
-	`gameId` int NOT NULL,
-	`title` varchar(255) NOT NULL,
-	`summary` text  NULL,
-	`cover_url` varchar(255) NULL,
-       	`rating` decimal(5,2) NULL,
-	`release_date` date NULL,
-	PRIMARY KEY (`gameId`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-
-
-
-DROP TABLE IF EXISTS `platforms`;
-CREATE TABLE IF NOT EXISTS `platforms` (
-	`platformId` int NOT NULL,
-	`name` varchar(100) NOT NULL,
-	PRIMARY KEY (`platformId`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-
-DROP TABLE IF EXISTS `genres`;
-CREATE TABLE IF NOT EXISTS `genres` (
-	`genreId` int NOT NULL,
-	`name` varchar(100) NOT NULL,
-	PRIMARY KEY (`genreId`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-
--- DROP TABLE IF EXISTS `game_platforms`;
-CREATE TABLE IF NOT EXISTS `game_platforms` (
-	`game_id` int NOT NULL,
-	`platform_id` int NOT NULL, 
-	PRIMARY KEY (`game_id`, `platform_id`),
-	FOREIGN KEY (`game_id`) REFERENCES `games`(`gameId`) ON DELETE CASCADE,
-	FOREIGN KEY (`platform_id`) REFERENCES `platforms`(`platformId`) ON DELETE CASCADE) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-
-
--- DROP TABLE IF EXISTS `game_genres`;
-CREATE TABLE IF NOT EXISTS `game_genres` (
-	`game_id` int NOT NULL,
-	`genre_id` int NOT NULL,
-	PRIMARY KEY (`game_id`, `genre_id`),
-	FOREIGN KEY (`game_id`) REFERENCES `games`(`gameId`) ON DELETE CASCADE,
-	FOREIGN KEY (`genre_id`) REFERENCES `genres`(`genreId`) ON DELETE CASCADE) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-
--- DROP TABLE IF EXISTS `user_platforms`;
-CREATE TABLE IF NOT EXISTS `user_platforms` (
-	`user_id` int NOT NULL,
-	`platform_id` int NOT NULL,
-	PRIMARY KEY (`user_id`, `platform_id`),
-	FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON DELETE CASCADE,
-	FOREIGN KEY (`platform_id`) REFERENCES `platforms`(`platformId`) ON DELETE CASCADE) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4; 
-
--- DROP TABLE IF EXISTS `user_genres`;
-CREATE TABLE IF NOT EXISTS `user_genres` (
-        `user_id` int NOT NULL,
-        `genre_id` int NOT NULL,
-        PRIMARY KEY (`user_id`, `genre_id`),
-        FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON DELETE CASCADE,
-        FOREIGN KEY (`genre_id`) REFERENCES `genres`(`genreId`) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-
--- DROP TABLE IF EXISTS `user_library`;
-CREATE TABLE IF NOT EXISTS `user_library` (
-	`id` int NOT NULL AUTO_INCREMENT,
-	`user_id` int NOT NULL,
-	`game_id` int NOT NULL,
-	`status` enum('watchlist', 'playing', 'completed', 'dropped') DEFAULT 'watchlist',
-	`email` TINYINT(1) DEFAULT 0,
-	`sms` TINYINT(1) DEFAULT 0,
-	PRIMARY KEY (`id`),
-	FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON DELETE CASCADE,
-	FOREIGN KEY (`game_id`) REFERENCES `games`(`gameId`) ON DELETE CASCADE) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-
-DROP TABLE IF EXISTS `user_friends`;
-CREATE TABLE `user_friends` (
-	`id` int NOT NULL AUTO_INCREMENT,
-	`user_id` int NOT NULL,
-	`friend_id` int NOT NULL,
-	`created_at` timestamp DEFAULT CURRENT_TIMESTAMP,
-	PRIMARY KEY (`id`),
-	UNIQUE KEY `unique_friendship` (`user_id`,`friend_id`),
-	FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON DELETE CASCADE,
-	FOREIGN KEY (`friend_id`) REFERENCES `users`(`id`) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-
-DROP TABLE IF EXISTS `reviews`;
-CREATE TABLE `reviews` (
-	`id` int NOT NULL AUTO_INCREMENT,
-	`user_id` int NOT NULL,
-	`game_id` int NOT NULL,
-	`rating` int CHECK (rating BETWEEN 1 AND 10),
-	`comment` text,
-	`created_at` timestamp DEFAULT CURRENT_TIMESTAMP,
-	PRIMARY KEY (`id`),
-	FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON DELETE CASCADE,
-	FOREIGN KEY (`game_id`) REFERENCES `games`(`gameId`) ON DELETE CASCADE) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-
-
-INSERT IGNORE INTO platforms (platformId, name) VALUES
-(3, 'Linux'), (6, 'PC (Microsoft Windows)'), (7, 'PlayStation'),
-(8, 'PlayStation 2'), (9, 'PlayStation 3'), (11, 'Xbox'),
-(12, 'Xbox 360'), (13, 'PC (DOS)'), (14, 'Mac'),
-(18, 'Nintendo Entertainment System (NES)'), (19, 'Super Nintendo Entertainment System (SNES)'),
-(34, 'Android'), (39, 'iOS'), (48, 'PlayStation 4'),
-(49, 'Xbox One'), (130, 'Nintendo Switch'), (167, 'PlayStation 5'),
-(169, 'Xbox Series X|S');
-
-
-INSERT IGNORE INTO genres (genreId, name) VALUES
-(2, 'Point-and-click'), (4, 'Fighting'), (5, 'Shooter'),
-(7, 'Music'), (8, 'Platform'), (9, 'Puzzle'),
-(10, 'Racing'), (11, 'Real Time Strategy (RTS)'), (12, 'Role-playing (RPG)'),
-(13, 'Simulator'), (14, 'Sport'), (15, 'Strategy'),
-(16, 'Turn-based strategy (TBS)'), (24, 'Tactical'), (25, 'Hack and slash/Beat em up'),
-(26, 'Quiz/Trivia'), (31, 'Adventure'), (32, 'Indie'),
-(33, 'Arcade'), (34, 'Visual Novel'), (35, 'Card & Board Game'), (36, 'MOBA');
---
--- Dumping data for table `users`
---
-
-/*!40000 ALTER TABLE `users` DISABLE KEYS */;
--- INSERT INTO `users` VALUES (10,'test','test@gmail.com','$2y$10$MIUOWDd24abc1atnAQ3Xm.b0Jeljc10fXakGvsdgODpkLGgcPzTou','test','test','2026-02-24 20:24:18'),(11,'Arghavan123','ak123@gmail.com','$2y$10$SalDwrBjTs2qO86lfLrTUerNnfhCtQvoRmKv4O.IwE0yUMNNskrHi','Arghavn','Katebi','2026-02-24 20:24:18');
-/*!40000 ALTER TABLE `users` ENABLE KEYS */;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
-
-CREATE TABLE IF NOT EXISTS `gameLinks` (
-gameId INT,
-storeName VARCHAR(50),
-url VARCHAR(255),
-PRIMARY KEY (gameId,url)
-);
-
 
 /*!40101 SET SQL_MODE=@OLD_SQL_MODE */;
 /*!40014 SET FOREIGN_KEY_CHECKS=@OLD_FOREIGN_KEY_CHECKS */;
@@ -198,4 +271,4 @@ PRIMARY KEY (gameId,url)
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2026-02-24 16:43:59
+-- Dump completed on 2026-05-03 14:04:52
