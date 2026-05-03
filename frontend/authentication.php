@@ -43,7 +43,7 @@ $loggedUser = $_SESSION['username'];
 				}
 			}
 		}
-		request.send("type=sendCode&username" + username + "&Method=" + method);
+		request.send("type=sendCode&username=" + username + "&Method=" + method);
 	}
 
 	function verifyCode() {
@@ -63,7 +63,7 @@ $loggedUser = $_SESSION['username'];
 				}
 			}
 		}
-		request.send("type=verifyCode&username" + username + "&Code=" + code);
+		request.send("type=verifyCode&username=" + username + "&Code=" + code);
 	}
 </script>
 </head>
@@ -73,7 +73,7 @@ $loggedUser = $_SESSION['username'];
 <div class="gamer-card col-md-4 card p-4 shadow-sm">
 <h2 class="text-center mb-4">Two Factor Authentication</h2>
 <div class="mb-3 text-center">
-        <label class=="form-label">How do you want to receive your code?</label>
+        <label class="form-label">How do you want to receive your code?</label>
 	<div class="form-check form-check-inline">
 		<input class="form-check-input" type="radio" name="method" id="email" value="email" checked>
 		<label class="form-check-label" for="email">Email</label>
@@ -83,14 +83,14 @@ $loggedUser = $_SESSION['username'];
                 <label class="form-check-label" for="sms">SMS</label>
         </div>
 </div>
-<div class "d-grid gap-2 mb-3">
+<div class="d-grid gap-2 mb-3">
 	<button class="btn btn-warning" type="button" onclick="requestCode();">Send Code</button>
 </div>
 <div id="verification" style="display: none;">
 	<hr>
 	<div class "mb-3">
 		<label class="form-label">Enter 6 Digit verification code</label>
-		<input type="text" id="code" class="form-control" placeholder="123456" maxlenght="6">
+		<input type="text" id="code" class="form-control" placeholder="123456" maxlength="6">
 	</div>
 	<div class="d-grid gap-2 mb-3">
 		<button class="btn btn-primary" type="button" onclick="verifyCode();">Verify</button>

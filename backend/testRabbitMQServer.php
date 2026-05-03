@@ -214,7 +214,7 @@ $platStmt = $pdo->prepare("INSERT INTO user_platforms (user_id, platform_id) VAL
    case "sendCode":
 	   $username = $request['username'];
 	   $method = $request['method'];
-
+	   global $telnyx_sender_id, $telnyx_api_key;
 	   $stmt = $pdo->prepare("SELECT id, email, phone, firstname FROM users WHERE username = ?");
 	   $stmt->execute([$username]);
 	   $user = $stmt->fetch(PDO::FETCH_ASSOC);
