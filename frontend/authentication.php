@@ -30,6 +30,40 @@ $loggedUser = $_SESSION['username'];
 		var username = "<?php echo $loggedUser; ?>";
 
 		var request = new XMLHttpRequest();
+		request.open("POST", "2faBackend.php", true);
+		request.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+		request.onreadystatechange = function () {
+			if ((this.readyState == 4) && (this.status == 200)) {
+				var text = JSON.parse(this.responseText);
+				if (text.status === true) {
+					document.getElementById("textResponse").innerHTML = "<b style='color:green;'>Code has been sent</b>";
+					document.getElementById("verification").style.display = "block";
+				} else {
+					document.getElementById("textResponse").innerHTML = "<b style='color:red;>" + text.message + "</b>";
+				}
+			}
+		}
+		request.send("type=sendCode&User" + username + "&Method=" + method);
+	}
+
+	function verifyCode() {
+		var code = document.getElementById('code').value;
+		var username = "<?php echo $loggedUser; ?>";
+		var request = new XMLHttpRequest();
+		request.open("POST", "2faBackend.php", true);
+		request.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+
+		request.onreadystatechange = function () {
+			if (this.readyState == 4 && this.status == 200) {
+				var text = JSON.parse(this.responseText);
+				if (text.status === true) {
+					window.location.href = "HomePage.php";
+				} else {
+					document.getElementById("textResponse").innerHTML = "<b style='color:red;'>" + text.message + "</b>";
+				}
+			}
+		}
+		request.send("type=verifyCode&User" + username + "&Code=" + code);
 	}
 </script
 </head>
