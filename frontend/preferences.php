@@ -31,12 +31,14 @@ $usrGens = $response['data']['user_genres'] ??[];
 <!DOCTYPE html>
 <html>
 <head>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta charset="UTF-8">
     <title>My Preferences - GAMERS DUNGEON</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
 <body class="bg-light">
 <?php include('navBar.php'); ?>
+<!--Similar to the onboardign file, this page first gets the current settings using user id in the user_genres and user_platforms tables so that they already show clicked. whatever changes user makes first deletes all entries from table and selecs their new choice.s-->
 <div class="container mt-5">
 <h1 class="mb-2 fw-bold">Gaming Preferences</h1>
 <p class="text-muted mb-4">Select the platforms you own and the genres you like to receive personalized reccomendaitions!</p>

@@ -6,14 +6,11 @@ require_once('rabbitMQLib.inc');
 require_once('config.php');
 require_once('igdbHarvester.php');
 
-try {
     $pdo = new PDO("mysql:host=$db_host;dbname=$db_name;charset=utf8mb4", $db_user, $db_pass);
     $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-} catch (PDOException $e) {
-    die("ERROR: Could not connect to database. " . $e->getMessage());
-}
 
-function doLogin($username,$password)
+
+function login($username,$password)
 {
 	global $db_host, $db_user, $db_pass, $db_name;
 
@@ -21,9 +18,6 @@ function doLogin($username,$password)
 
     if ($mydb->connect_error){
 	    return array("status" => false, "message" => "Connection to Database failed"); }
-    //SESSION
-
-    //SESSION
     $stmt = $mydb->prepare("SELECT id, password FROM users WHERE username = ?");	
 $stmt->bind_param("s", $username);
 $stmt->execute();
@@ -58,7 +52,7 @@ $mydb->close();
 	$mydb->close();
 }
 
-function doLogout($sessionKey) {
+function logout($sessionKey) {
 
 	global $db_host, $db_user, $db_pass, $db_name;
 
@@ -79,7 +73,7 @@ if ($mydb->connect_error){
 	return array("status" => true, "message" => "Session terminated in Database");
 }
 
-function doRegister($fName,$lName,$email,$username,$password)
+function register($fName,$lName,$email,$phone,$username,$password)
 {
 	global $db_host, $db_user, $db_pass, $db_name;
 
@@ -90,14 +84,19 @@ function doRegister($fName,$lName,$email,$username,$password)
 	$stmt = $mydb->prepare("SELECT username, email FROM users WHERE username = ? OR email = ?");
 	$stmt->bind_param("ss", $username, $email);
 	$stmt->execute();
+<<<<<<< HEAD
 	//	$stmt->store_result();
 	$stmt->bind_result($tempUser, $tempEmail);
 
 	//if ($stmt->num_rows > 0) {
 	if ($stmt->fetch()) {
+=======
+$stmt->bind_result($tempUser, $tempEmail);
+
+if ($stmt->fetch()) {
+>>>>>>> b109d9c7515b8dc4c7a9460ac875e33558aab8aa
 		$stmt->close();
 		$mydb->close();
-		//return array("status" => false, "message" => "Username is taken, or email already in use");
 		if (strtolower($tempUser) === strtolower($username)) {
 			return array("status" => false, "message" => "Username is already taken");
 		}
@@ -109,14 +108,31 @@ function doRegister($fName,$lName,$email,$username,$password)
 
 	$hash = password_hash($password, PASSWORD_DEFAULT);
 
-	$createUser = $mydb->prepare("INSERT INTO users (firstname, lastname, email, username, password) VALUES (?, ?, ?, ?, ?)");
-	$createUser->bind_param("sssss", $fName, $lName, $email, $username, $hash);
+	$createUser = $mydb->prepare("INSERT INTO users (firstname, lastname, email, phone, username, password) VALUES (?, ?, ?, ?, ?, ?)");
+	$createUser->bind_param("ssssss", $fName, $lName, $email, $phone, $username, $hash);
 
 	if ($createUser->execute()) {
+		$userid = $mydb->insert_id;
 		$createUser->close();
+
+		$sessionKey = bin2hex(random_bytes(16));
+$session = $mydb->prepare("INSERT INTO sessions (userid, session_id) VALUES (?, ?) ON DUPLICATE KEY UPDATE session_id = ?, created_at = CURRENT_TIMESTAMP");
+		$session->bind_param("iss", $userid, $sessionKey, $sessionKey);
+
+		if (!$session->execute()){
+			$session->close();
+			$mydb->close();
+			return array("status" => false, "message" => "Session Error" . $mydb->error);
+		}
+
 		$mydb->close();
+<<<<<<< HEAD
 			return array("status" => true, "message" => "You have Registered successfully!");
 		}
+=======
+		return array("status" => true, "message" => "You have Registered successfully!", "session_key" => $sessionKey);
+	}
+>>>>>>> b109d9c7515b8dc4c7a9460ac875e33558aab8aa
 	else {
 		$createUser->close();
 		$mydb->close();
@@ -128,10 +144,38 @@ function requestProcessor($request)
 {
 	global $pdo, $client_id, $client_secret;
 	echo "received request".PHP_EOL;
+<<<<<<< HEAD
 	var_dump($request);
 	if(!isset($request['type']))
 	{
 		return "ERROR: unsupported message type";
+=======
+  var_dump($request);
+	if(!isset($request['type']))
+  {
+    return "ERROR: unsupported message type";
+  }
+  switch ($request['type'])
+  {
+    case "login":
+      return login($request['username'],$request['password']);
+    case "register":
+	    $test_hash = password_hash($request['password'], PASSWORD_DEFAULT);
+	    echo "Hashed: " .  $test_hash . PHP_EOL;
+	    return register($request['fName'],$request['lName'],$request['email'],$request['phone'],$request['username'],$request['password']);
+	    //user preferences start
+	    
+    case "get_preferences":
+	    global $pdo;
+	    $sessionKey = $request['session_key'];
+
+	$gUser = $pdo->prepare("SELECT userid FROM sessions WHERE session_id = ?");
+    	$gUser->execute([$sessionKey]);
+	$userR = $gUser->fetch(PDO::FETCH_ASSOC);
+
+	if (!$userR) {
+	return array("returnCode" => '0', 'message' => "Login Again");
+>>>>>>> b109d9c7515b8dc4c7a9460ac875e33558aab8aa
 	}
 	switch ($request['type'])
 	{
@@ -172,6 +216,7 @@ function requestProcessor($request)
 				'user_platforms' => $usrPlats,
 				'user_genres' => $usrGens
 
+<<<<<<< HEAD
 			];
 			return array("returnCode" => '1', 'message' => "Preferences Loaded", 'data' => $data);	    
 		case "save_preferences":
@@ -219,6 +264,34 @@ function requestProcessor($request)
 			$stmt = $pdo->prepare("SELECT gameId as id, title as name, summary, cover_url as cover_image, rating FROM games WHERE title LIKE ?");
 			$stmt->execute(["%$searchTerm%"]);
 			$local_results = $stmt->fetchAll(PDO::FETCH_ASSOC);
+=======
+$pdo->beginTransaction();
+$pdo->prepare("DELETE FROM user_platforms WHERE user_id = ?")->execute([$userId]);
+$pdo->prepare("DELETE FROM user_genres WHERE user_id = ?")->execute([$userId]);
+// ins. user plats.
+$platStmt = $pdo->prepare("INSERT INTO user_platforms (user_id, platform_id) VALUES (?, ?)");
+ foreach ($platforms as $pId) {
+ $platStmt->execute([$userId, $pId]);
+ }
+// ins. user genres
+        $genStmt = $pdo->prepare("INSERT INTO user_genres (user_id, genre_id) VALUES (?, ?)");
+        foreach ($genres as $gId) {
+            $genStmt->execute([$userId, $gId]);
+    }
+   $pdo->commit();
+  return array("returnCode" => '1', "message" => "Preferences saved.");
+    
+    
+    case "logout":
+	    return logout($request['session_key']);
+    case "validate_session":
+	    return doValidate($request['sessionId']);
+    case "search_games":
+	    $searchTerm = $request['query'];
+	    $stmt = $pdo->prepare("SELECT gameId as id, title as name, summary, cover_url as cover_image, rating FROM games WHERE title LIKE ?");
+	    $stmt->execute(["%$searchTerm%"]);
+	    $local_results = $stmt->fetchAll(PDO::FETCH_ASSOC);
+>>>>>>> b109d9c7515b8dc4c7a9460ac875e33558aab8aa
 
 			if (!empty($local_results)) {
 				return array("returnCode" => '1', 'message' => "Loaded from local DB", 'data' => $local_results);
@@ -255,6 +328,7 @@ function requestProcessor($request)
 			$stmt->execute([$gameId]);
 			$data = $stmt->fetch(PDO::FETCH_ASSOC);
 
+<<<<<<< HEAD
 			if ($data) {
 				return array("returnCode" => '1', 'message' => "Data harvesting successful", 'data' => $data);
 			}
@@ -273,6 +347,25 @@ function requestProcessor($request)
 			if (!$userR) {
 				return array("returnCode" => '0', 'message' => "Login again please");
 			}
+=======
+	    $stmt = $pdo->prepare("SELECT g.*, GROUP_CONCAT(p.name SEPARATOR ', ') as platform_list FROM games g LEFT JOIN game_platforms gp ON g.gameId = gp.game_id LEFT JOIN platforms p ON gp.platform_id = p.platformId WHERE g.gameId = ? GROUP BY g.gameId");
+	    $stmt->execute([$gameId]);
+	    $data = $stmt->fetch(PDO::FETCH_ASSOC);
+	    if ($data) {
+		$link = $pdo->prepare("SELECT storeName, url FROM gameLinks WHERE gameId = ?");
+		$link->execute([$gameId]);
+		$data['storeLinks'] = $link->fetchAll(PDO::FETCH_ASSOC);
+		    return array("returnCode" => '1', 'message' => "Data harvesting successful", 'data' => $data);
+	    }
+	    else {
+	    return array("returnCode" => '0', 'message' => "Game not Found");
+	    }
+case "addToLibrary":
+	global $pdo;
+	$sessionKey = $request['session_key'];
+	$gameId = $request['game_id'];
+	$status = $request['status'];
+>>>>>>> b109d9c7515b8dc4c7a9460ac875e33558aab8aa
 
 			$userId = $userR['userid'];
 
@@ -464,7 +557,142 @@ function requestProcessor($request)
 		//end of homepage cases
 		//end of switch	
 	}
+<<<<<<< HEAD
 	return array("returnCode" => '0', 'message'=>"Server received request and processed");
+=======
+
+	$userId = $userR['userid'];
+
+	$check = $pdo->prepare("SELECT id FROM user_library WHERE user_id = ? AND game_id = ?");
+	$check->execute([$userId, $gameId]);
+
+	if ($check->rowCount() > 0) {
+		$update = $pdo->prepare("UPDATE user_library SET status = ? WHERE user_id = ? AND game_id = ?");
+	if ($update->execute([$status, $userId, $gameId])) {
+		return array("returnCode" => '1', 'message' => "Library Updated!");
+	}
+	}
+	else {
+		$insert = $pdo->prepare("INSERT INTO user_library (user_id, game_id, status) VALUES (?, ?, ?)");
+		if ($insert->execute([$userId, $gameId, $status])) {
+		return array ("returnCode" => '1', 'message' => "Added to your library!");
+		}
+	}
+case "removeGame":
+	global $pdo;
+	$sessionKey = $request['session_key'];
+	$gameId = $request['game_id'];
+
+	$getUser = $pdo->prepare("SELECT userid FROM sessions WHERE session_id = ?");
+	$getUser->execute([$sessionKey]);
+	$userR = $getUser->fetch(PDO::FETCH_ASSOC);
+	if (!$userR) {
+	return array("returnCode" => '0', 'message' => "Login again please");
+	}
+
+	$userId = $userR['userid'];
+
+		$update = $pdo->prepare("DELETE from  user_library WHERE user_id = ? AND game_id = ?");
+	if ($update->execute([ $userId, $gameId])) {
+		return array("returnCode" => '1', 'message' => "Game Removed");
+	}
+case "get_user_library":
+	global $pdo;
+	$sessionKey = $request['session_key'];
+
+	$stmt = $pdo->prepare("SELECT g.gameId, g.title, g.cover_url, l.status FROM user_library l JOIN games g ON l.game_id = g.gameId JOIN sessions s ON l.user_id = s.userid WHERE s.session_id = ? ");
+	$stmt->execute([$sessionKey]);
+	$userGames = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+	if ($userGames) {
+		return array("returnCode" => '1', 'message' => "Library pulled! ", 'data' => $userGames);
+	}
+	else {
+	return array("returnCode" => '0', 'message' => "Library is Empty! ");
+	}
+
+	//email noti here
+case "email_status":
+
+
+
+	//email noti end	
+
+case "homepage_data":
+	global $pdo;
+	$sessionKey = $request['session_key'];
+$getUser = $pdo->prepare("SELECT userid FROM sessions WHERE session_id = ?");
+        $getUser->execute([$sessionKey]);
+        $userR = $getUser->fetch(PDO::FETCH_ASSOC);
+        if (!$userR) {
+        return array("returnCode" => '0', 'message' => "Login again please");
+        }
+        $userId = $userR['userid'];
+	$stRecs = $pdo->prepare("
+SELECT DISTINCT g.* FROM games g
+JOIN game_platforms gp ON g.gameId = gp.game_id
+JOIN user_platforms up ON gp.platform_id = up.platform_id
+JOIN game_genres gg ON g.gameId = gg.game_id
+JOIN user_genres ug ON gg.genre_id = ug.genre_id
+WHERE up.user_id = ? AND ug.user_id = ?
+AND g.gameId NOT IN (SELECT game_id FROM user_library WHERE user_id = ?)
+ORDER BY RAND() LIMIT 4 ");
+	$stRecs->execute([$userId, $userId, $userId]);
+$recs = $stRecs->fetchAll(PDO::FETCH_ASSOC);
+//upcoming games
+$platStmt = $pdo->prepare("SELECT platform_id FROM user_platforms WHERE user_id = ?");
+$platStmt->execute([$userId]);
+$uPlats = $platStmt->fetchAll(PDO::FETCH_COLUMN);
+
+$genStmt = $pdo->prepare("SELECT genre_id FROM user_genres WHERE user_id = ?");
+$genStmt->execute([$userId]);
+$uGens = $genStmt->fetchAll(PDO::FETCH_COLUMN);
+
+global $client_id, $client_secret;
+$token = getIGDBToken($client_id, $client_secret);
+
+$upcoming = harvestUpcomingGames($pdo, $client_id, $token, $uPlats, $uGens);
+$upc = [];
+foreach ($upcoming as $uc) {
+	$upc[] = [
+		'gameId' => $uc['id'],
+		'title' => $uc['name'],
+		'cover_url' => $uc['cover']['image_id'] ?? null
+	];
+}
+
+//random 
+$stLibGame = $pdo->prepare("SELECT g.* FROM user_library ul
+	JOIN games g ON ul.game_id = g.gameId
+WHERE ul.user_id = ? ORDER BY RAND() LIMIT 1");
+$stLibGame->execute([$userId]);
+$libGame = $stLibGame->fetch(PDO::FETCH_ASSOC);
+
+$related = [];
+if ($libGame) {
+	$stRel = $pdo->prepare("
+SELECT DISTINCT g.* FROM games g
+JOIN game_genres gg ON g.gameId = gg.game_id
+WHERE gg.genre_id IN (SELECT genre_id FROM game_genres WHERE game_id = ?)
+AND g.gameId != ?
+LIMIT 4 ");
+
+$stRel->execute([$libGame['gameId'], $libGame['gameId']]);
+$related = $stRel->fetchAll(PDO::FETCH_ASSOC);
+}
+return array("returnCode" => '1', "data" => [
+	"recommendations" => $recs,
+	"upcoming" => $upc,
+	"lib_game" => $libGame,
+	"related" => $related
+]
+);
+
+
+//end cases.. 
+  }
+  return array("returnCode" => '0', 'message'=>"Server received request and processed");
+>>>>>>> b109d9c7515b8dc4c7a9460ac875e33558aab8aa
 
 }
 

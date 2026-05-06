@@ -28,6 +28,8 @@ if (isset($response['returnCode']) && $response['returnCode'] == '1') {
 <!DOCTYPE html>
 <html>
 <head>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
 <meta charset="UTF-8">
     <title>My Game Library</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -55,6 +57,9 @@ if (isset($response['returnCode']) && $response['returnCode'] == '1') {
  <span class="badge bg-secondary text-uppercase"><?php echo htmlspecialchars($game['status']); ?></span>
 </div>
  </a>
+<div class="card-footer bg-white border-0 text-center pt-2">
+<a href="removeGame.php?id=<?php echo $game['gameId']; ?>" class="btn btn-sm btn-danger w-100">Remove from Library</a>
+</div>
  </div>
   </div>
  <?php endforeach; ?>
