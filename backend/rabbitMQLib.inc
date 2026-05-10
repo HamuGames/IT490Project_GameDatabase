@@ -76,6 +76,7 @@ class rabbitMQServer
 			$replykey = $this->routing_key.".response";
 			$conn_queue->bind($exchange->getName(),$replykey);
 			$exchange->publish(json_encode($response),$replykey,AMQP_NOPARAM,array('correlation_id'=>$msg->getCorrelationId()));
+			$conn->disconnect();
 
 				return;
 			}
@@ -225,6 +226,7 @@ class rabbitMQClient
 
 			$response = $this->response_queue[$uid];
 			unset($this->response_queue[$uid]);
+			$conn->disconnect();
 			return $response;
 		}
 		catch(Exception $e)

@@ -205,8 +205,10 @@ if (isset($listResponse['returnCode']) && $listResponse['returnCode'] === '1' &&
 
                 <div class="card friend-card shadow-sm p-3">
 
-                    <h5 class="fw-bold">
-                        <?php echo htmlspecialchars($f['username']); ?>
+		    <h5 class="fw-bold">
+			<a href="myLibrary.php?friend=<?php echo urlencode($f['username']); ?>" class="text-decoration-none text-dark">
+			<?php echo htmlspecialchars($f['username']); ?>
+			</a>
                     </h5>
 
                     <span class="badge mb-2 status-friend">
