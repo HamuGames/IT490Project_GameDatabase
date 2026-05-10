@@ -385,6 +385,7 @@ case "addToLibrary":
 		return array ("returnCode" => '1', 'message' => "Added to your library!");
 		}
 	}
+	break;
 case "removeGame":
 	global $pdo;
 	$sessionKey = $request['session_key'];
@@ -403,14 +404,29 @@ case "removeGame":
 	if ($update->execute([ $userId, $gameId])) {
 		return array("returnCode" => '1', 'message' => "Game Removed");
 	}
+	break;
 case "get_user_library":
 	global $pdo;
 	$sessionKey = $request['session_key'];
+	$targetUser = trim($request['target_user'] ?? '');
 
-	$stmt = $pdo->prepare("SELECT g.gameId, g.title, g.cover_url, l.status FROM user_library l JOIN games g ON l.game_id = g.gameId JOIN sessions s ON l.user_id = s.userid WHERE s.session_id = ? ");
-	$stmt->execute([$sessionKey]);
+	$getUser = $pdo->prepare("SELECT userid FROM sessions WHERE session_id = ?");
+	$getUser->execute([$sessionKey]);
+	$userR = $getUser->fetch(PDO::FETCH_ASSOC);
+	if (!$userR) {
+		return array("returnCode" => '0', 'message' => "Login again");
+	}
+	$myUserId = $userR['userid'];
+	
+	if ($targetUser !== '') {
+	$stmt = $pdo->prepare("SELECT g.gameId, g.title, g.cover_url, l.status FROM user_library l JOIN games g ON l.game_id = g.gameId JOIN users u ON l.user_id = u.id WHERE LOWER(u.username) = LOWER(?) ");
+	$stmt->execute([$targetUser]);
+} else {
+$stmt = $pdo->prepare("SELECT g.gameId, g.title, g.cover_url, l.status FROM user_library l JOIN games g ON l.game_id = g.gameId WHERE l.user_id = ? ");
+        $stmt->execute([$myUserId]);
+}
+
 	$userGames = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
 	if ($userGames) {
 		return array("returnCode" => '1', 'message' => "Library pulled! ", 'data' => $userGames);
 	}
@@ -453,18 +469,24 @@ case "add_friend":
 		$checkFriends = $pdo->prepare("SELECT id FROM user_friends WHERE user_id = ? AND friend_id = ?");
 		$checkFriends->execute([$userId, $friendId]);
 		if ($checkFriends->fetch()) {
-			return array("returnCode" => '0', 'message' => "You are already friends with this user");
+			return array("returnCode" => '0', 'message' => "You are already sent a request!");
 		}
 
 		$insertFriend = $pdo->prepare("INSERT INTO user_friends (user_id, friend_id) VALUES (?, ?)");
 		$insertFriend->execute([$userId, $friendId]);
-		$insertFriend->execute([$friendId, $userId]);
+//		$insertFriend->execute([$friendId, $userId]);
 
-		return array("returnCode" => '1', 'message' => "Friend added successfully");
+		$checkMut = $pdo->prepare("SELECT id FROM user_friends WHERE user_id = ? AND friend_id = ?");
+		$checkMut->execute([$friendId, $userId]);
+		if ($checkMut->fetch()) {
+		return array("returnCode" => '1', 'message' => "You are now friends!");
+		}
+		return array("returnCode" => '1', 'message' => "Request Sent successfully");
 
 	} catch (Exception $e) {
 		return array("returnCode" => '0', 'message' => "Database error: " . $e->getMessage());
 	}
+	break;
 
 case "get_friends_library":
 	global $pdo;
@@ -483,11 +505,12 @@ case "get_friends_library":
 		COALESCE(COUNT(DISTINCT ul.game_id), 0) AS game_count,
 		COALESCE(MAX(CASE WHEN ul.status = 'playing' THEN g.title END), MAX(g.title), 'No games yet') AS favorite_game,
 		GROUP_CONCAT(DISTINCT g.title ORDER BY g.title SEPARATOR '||') AS games_csv
-	FROM user_friends uf
-	JOIN users u ON u.id = uf.friend_id
+	FROM user_friends uf1
+	INNER JOIN user_friends uf2 ON uf1.user_id = uf2.friend_id AND uf1.friend_id = uf2.user_id
+	JOIN users u ON u.id = uf1.friend_id
 	LEFT JOIN user_library ul ON ul.user_id = u.id
 	LEFT JOIN games g ON g.gameId = ul.game_id
-	WHERE uf.user_id = ?
+	WHERE uf1.user_id = ?
 	GROUP BY u.id, u.username
 	ORDER BY u.username ASC");
 	$friendsStmt->execute([$userId]);
@@ -510,7 +533,7 @@ case "get_friends_library":
 	}
 
 	return array("returnCode" => '1', 'message' => "Friends loaded", 'data' => $data);
-
+break;
 case "search_users":
 	global $pdo;
 	$sessionKey = $request['session_key'] ?? '';
@@ -539,7 +562,7 @@ case "search_users":
 	$rows = $searchStmt->fetchAll(PDO::FETCH_ASSOC);
 
 	return array("returnCode" => '1', 'message' => "Users found", 'data' => $rows);
-
+break;
 case "email_status":
 
 

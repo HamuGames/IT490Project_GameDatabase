@@ -26,6 +26,7 @@ $related = $response['data']['related'] ?? [];
 
 <html>
 <head>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title> Home - GAMERS DUNGEON </title>
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet">
 <link rel="stylesheet" href="css/main.css">
@@ -38,9 +39,6 @@ $related = $response['data']['related'] ?? [];
 <?php include('navBar.php'); ?>
 <div class="container mt-4">
 	<h1 class="display-5 fw-bold mb-4 text-dark">Welcome, <?php echo htmlspecialchars($_SESSION['username']); ?>!</h1>
-	<a href="FriendsLibrary.php" class="btn btn-success btn-lg">
-		Friends Library
-	</a>
 </div>
 <!-- searchbar implementation in page. once working Navigation Bar will not have searchbar inside HomePage ONLY.Instead a nice searchbar in the center.-->
 <section>
