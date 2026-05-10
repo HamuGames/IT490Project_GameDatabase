@@ -330,7 +330,7 @@ case "get_user_library":
 	$stmt->execute([$targetUser]);
 } else {
 $stmt = $pdo->prepare("SELECT g.gameId, g.title, g.cover_url, l.status FROM user_library l JOIN games g ON l.game_id = g.gameId WHERE l.user_id = ? ");
-        $stmt->execute([$targetUser]);
+        $stmt->execute([$myUserId]);
 }
 
 	$userGames = $stmt->fetchAll(PDO::FETCH_ASSOC);

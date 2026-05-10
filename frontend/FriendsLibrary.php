@@ -126,15 +126,6 @@ if (isset($listResponse['returnCode']) && $listResponse['returnCode'] === '1' &&
 
     <h1 class="mb-4 fw-bold">Friends Library</h1>
 
-    <!-- Debug Panel -->
-    <div class="card mb-3 bg-light border-secondary" style="font-size: 12px;">
-        <div class="card-body">
-            <strong>Debug Info:</strong><br>
-            Session Key: <?php echo isset($_SESSION['session_key']) && !empty($_SESSION['session_key']) ? 'SET ✓' : 'NOT SET ✗'; ?><br>
-            Username: <?php echo isset($_SESSION['username']) ? htmlspecialchars($_SESSION['username']) : 'N/A'; ?><br>
-        </div>
-    </div>
-
     <?php if ($flashMessage !== ''): ?>
         <div class="alert alert-<?php echo htmlspecialchars($flashType); ?>">
             <?php echo htmlspecialchars($flashMessage); ?>
