@@ -292,6 +292,7 @@ case "addToLibrary":
 		return array ("returnCode" => '1', 'message' => "Added to your library!");
 		}
 	}
+	break;
 case "removeGame":
 	global $pdo;
 	$sessionKey = $request['session_key'];
@@ -310,6 +311,7 @@ case "removeGame":
 	if ($update->execute([ $userId, $gameId])) {
 		return array("returnCode" => '1', 'message' => "Game Removed");
 	}
+	break;
 case "get_user_library":
 	global $pdo;
 	$sessionKey = $request['session_key'];
@@ -372,6 +374,7 @@ case "add_friend":
 	} catch (Exception $e) {
 		return array("returnCode" => '0', 'message' => "Database error: " . $e->getMessage());
 	}
+	break;
 
 case "get_friends_library":
 	global $pdo;
@@ -417,7 +420,7 @@ case "get_friends_library":
 	}
 
 	return array("returnCode" => '1', 'message' => "Friends loaded", 'data' => $data);
-
+break;
 case "search_users":
 	global $pdo;
 	$sessionKey = $request['session_key'] ?? '';
@@ -446,7 +449,7 @@ case "search_users":
 	$rows = $searchStmt->fetchAll(PDO::FETCH_ASSOC);
 
 	return array("returnCode" => '1', 'message' => "Users found", 'data' => $rows);
-
+break;
 case "email_status":
 
 
