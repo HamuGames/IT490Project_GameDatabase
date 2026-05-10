@@ -28,7 +28,7 @@ switch ($request["type"])
 		}
 		if (is_array($response)) {
 			if (isset($response['status']) && $response['status'] === true) {
-				$_SESSION['logged_in'] = true;
+				$_SESSION['authentication'] = true;
 				$_SESSION['username'] = $request['username'];
 			$_SESSION['session_key'] = $response['session_key'];	
 			}

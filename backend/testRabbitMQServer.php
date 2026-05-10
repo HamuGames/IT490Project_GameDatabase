@@ -169,7 +169,8 @@ function requestProcessor($request)
 	if(!isset($request['type']))
   {
     return "ERROR: unsupported message type";
-  }
+	}
+	try {
   switch ($request['type'])
   {
     case "login":
@@ -297,7 +298,100 @@ $platStmt = $pdo->prepare("INSERT INTO user_platforms (user_id, platform_id) VAL
    $pdo->commit();
   return array("returnCode" => '1', "message" => "Preferences saved.");
     
-    
+	//2fa starts hereee
+
+   case "sendCode":
+	   $username = $request['username'];
+	   $method = $request['method'];
+	   global $telnyx_sender_id, $telnyx_api_key;
+	   $stmt = $pdo->prepare("SELECT id, email, phone, firstname FROM users WHERE username = ?");
+	   $stmt->execute([$username]);
+	   $user = $stmt->fetch(PDO::FETCH_ASSOC);
+
+	   if (!$user) {
+	   	return array("status" => false, "message" => "User not found");
+	   }
+	   $userId = $user['id'];
+
+	   $code = (string) random_int(100000, 999999);
+
+	   $insert = $pdo-> prepare("
+		INSERT INTO user2fa (id, code, exp) 
+		VALUES (?, ?, DATE_ADD(NOW(), INTERVAL 15 MINUTE))
+		ON DUPLICATE KEY UPDATE
+		code = VALUES(code), exp = VALUES(exp)");
+
+	if ($insert->execute([$userId, $code])) {
+		$email = $user['email'];
+		$phone = $user['phone'];
+		$name = $user['firstname'];
+
+		if ($method === 'sms') {
+			$messageData = json_encode([
+				'from' => $telnyx_sender_id,
+				'to' => $phone,
+				'text' => "Hey, $name, your login code is: " . $code . ". It will expire in 15 minutes."
+			]);
+			$ch = curl_init('https://api.telnyx.com/v2/messages');
+			curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+   			curl_setopt($ch, CURLOPT_POST, true);
+    			curl_setopt($ch, CURLOPT_POSTFIELDS, $messageData);
+    			curl_setopt($ch, CURLOPT_HTTPHEADER, [
+        			'Authorization: Bearer ' . $telnyx_api_key,
+        			'content-type: application/json',
+        			'Accept: application/json'
+			]);
+			$apiResponse = curl_exec($ch);
+			curl_close($ch);
+		} else {
+			$subject = "Your 2FA Login Code";
+			$message = "Hey $name, your login code is: " . $code . ". It will expire in 15 minutes.";
+			$headers = "From: it490.gamersdungeon@gmail.com";
+
+			mail($email, $subject, $message, $headers);
+		}
+		return array("status" => true, "message" => "Code generated and sent.");
+	} else {
+		return array("status" => false, "message" => "Error generating code");
+	}
+	   break;
+
+	  case "verifyCode":
+		  $username = $request['username'];
+		  $code = $request['code'];
+
+		  $stmt = $pdo->prepare("SELECT id, email, phone, firstname FROM users WHERE username = ?");
+		  $stmt->execute([$username]);
+		  $user = $stmt->fetch(PDO::FETCH_ASSOC);
+
+		  if (!$user) {
+		  	return array("status" => false, "message" => "User not found");
+		  }
+		  $id = $user['id'];
+
+		  $verify = $pdo->prepare("
+			SELECT * FROM user2fa
+			WHERE id = ? AND code = ? AND exp > NOW()
+			");
+		$verify->execute([$id, $code]);
+		$match = $verify->fetch(PDO::FETCH_ASSOC);
+
+		if ($match) {
+			$delete = $pdo->prepare("
+				DELETE FROM user2fa
+				WHERE id = ?
+				");
+			$delete->execute([$id]);
+			return array("status" => true, "message" => "Successful!");
+		} else {
+			return array("status" => false, "message" => "Invalid or Expired Code");
+		}
+		break;
+
+	
+	// 2fa ends hereee
+
+
     case "logout":
 	    return logout($request['session_key']);
     case "validate_session":
@@ -605,6 +699,7 @@ case "addToLibrary":
 		return array ("returnCode" => '1', 'message' => "Added to your library!");
 		}
 	}
+	break;
 case "removeGame":
 	global $pdo;
 	$sessionKey = $request['session_key'];
@@ -623,14 +718,29 @@ case "removeGame":
 	if ($update->execute([ $userId, $gameId])) {
 		return array("returnCode" => '1', 'message' => "Game Removed");
 	}
+	break;
 case "get_user_library":
 	global $pdo;
 	$sessionKey = $request['session_key'];
+	$targetUser = trim($request['target_user'] ?? '');
 
-	$stmt = $pdo->prepare("SELECT g.gameId, g.title, g.cover_url, l.status FROM user_library l JOIN games g ON l.game_id = g.gameId JOIN sessions s ON l.user_id = s.userid WHERE s.session_id = ? ");
-	$stmt->execute([$sessionKey]);
+	$getUser = $pdo->prepare("SELECT userid FROM sessions WHERE session_id = ?");
+	$getUser->execute([$sessionKey]);
+	$userR = $getUser->fetch(PDO::FETCH_ASSOC);
+	if (!$userR) {
+		return array("returnCode" => '0', 'message' => "Login again");
+	}
+	$myUserId = $userR['userid'];
+	
+	if ($targetUser !== '') {
+	$stmt = $pdo->prepare("SELECT g.gameId, g.title, g.cover_url, l.status FROM user_library l JOIN games g ON l.game_id = g.gameId JOIN users u ON l.user_id = u.id WHERE LOWER(u.username) = LOWER(?) ");
+	$stmt->execute([$targetUser]);
+} else {
+$stmt = $pdo->prepare("SELECT g.gameId, g.title, g.cover_url, l.status FROM user_library l JOIN games g ON l.game_id = g.gameId WHERE l.user_id = ? ");
+        $stmt->execute([$myUserId]);
+}
+
 	$userGames = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
 	if ($userGames) {
 		return array("returnCode" => '1', 'message' => "Library pulled! ", 'data' => $userGames);
 	}
@@ -639,6 +749,134 @@ case "get_user_library":
 	}
 
 	//email noti here
+case "add_friend":
+	global $pdo;
+	$sessionKey = $request['session_key'] ?? '';
+	$friendUsername = trim($request['friend_username'] ?? '');
+
+	if ($friendUsername === '') {
+		return array("returnCode" => '0', 'message' => "Friend username is required");
+	}
+
+	try {
+		$getUser = $pdo->prepare("SELECT userid FROM sessions WHERE session_id = ?");
+		$getUser->execute([$sessionKey]);
+		$userR = $getUser->fetch(PDO::FETCH_ASSOC);
+		if (!$userR) {
+			return array("returnCode" => '0', 'message' => "Session expired. Please login again.");
+		}
+		$userId = (int)$userR['userid'];
+
+		$friendStmt = $pdo->prepare("SELECT id FROM users WHERE LOWER(username) = LOWER(?)");
+		$friendStmt->execute([$friendUsername]);
+		$friendRow = $friendStmt->fetch(PDO::FETCH_ASSOC);
+
+		if (!$friendRow) {
+			return array("returnCode" => '0', 'message' => "User not found");
+		}
+
+		$friendId = (int)$friendRow['id'];
+		if ($friendId === $userId) {
+			return array("returnCode" => '0', 'message' => "You cannot add yourself as a friend");
+		}
+
+		$checkFriends = $pdo->prepare("SELECT id FROM user_friends WHERE user_id = ? AND friend_id = ?");
+		$checkFriends->execute([$userId, $friendId]);
+		if ($checkFriends->fetch()) {
+			return array("returnCode" => '0', 'message' => "You are already sent a request!");
+		}
+
+		$insertFriend = $pdo->prepare("INSERT INTO user_friends (user_id, friend_id) VALUES (?, ?)");
+		$insertFriend->execute([$userId, $friendId]);
+//		$insertFriend->execute([$friendId, $userId]);
+
+		$checkMut = $pdo->prepare("SELECT id FROM user_friends WHERE user_id = ? AND friend_id = ?");
+		$checkMut->execute([$friendId, $userId]);
+		if ($checkMut->fetch()) {
+		return array("returnCode" => '1', 'message' => "You are now friends!");
+		}
+		return array("returnCode" => '1', 'message' => "Request Sent successfully");
+
+	} catch (Exception $e) {
+		return array("returnCode" => '0', 'message' => "Database error: " . $e->getMessage());
+	}
+	break;
+
+case "get_friends_library":
+	global $pdo;
+	$sessionKey = $request['session_key'] ?? '';
+
+	$getUser = $pdo->prepare("SELECT userid FROM sessions WHERE session_id = ?");
+	$getUser->execute([$sessionKey]);
+	$userR = $getUser->fetch(PDO::FETCH_ASSOC);
+	if (!$userR) {
+		return array("returnCode" => '0', 'message' => "Session expired. Please login again.");
+	}
+	$userId = (int)$userR['userid'];
+
+	$friendsStmt = $pdo->prepare("SELECT
+		u.username,
+		COALESCE(COUNT(DISTINCT ul.game_id), 0) AS game_count,
+		COALESCE(MAX(CASE WHEN ul.status = 'playing' THEN g.title END), MAX(g.title), 'No games yet') AS favorite_game,
+		GROUP_CONCAT(DISTINCT g.title ORDER BY g.title SEPARATOR '||') AS games_csv
+	FROM user_friends uf1
+	INNER JOIN user_friends uf2 ON uf1.user_id = uf2.friend_id AND uf1.friend_id = uf2.user_id
+	JOIN users u ON u.id = uf1.friend_id
+	LEFT JOIN user_library ul ON ul.user_id = u.id
+	LEFT JOIN games g ON g.gameId = ul.game_id
+	WHERE uf1.user_id = ?
+	GROUP BY u.id, u.username
+	ORDER BY u.username ASC");
+	$friendsStmt->execute([$userId]);
+	$rows = $friendsStmt->fetchAll(PDO::FETCH_ASSOC);
+
+	$data = [];
+	foreach ($rows as $row) {
+		$games = [];
+		if (!empty($row['games_csv'])) {
+			$games = array_slice(explode('||', $row['games_csv']), 0, 5);
+		}
+
+		$data[] = [
+			'username' => $row['username'],
+			'status' => 'Friend',
+			'favorite_game' => $row['favorite_game'],
+			'games' => $games,
+			'count' => (int)$row['game_count']
+		];
+	}
+
+	return array("returnCode" => '1', 'message' => "Friends loaded", 'data' => $data);
+break;
+case "search_users":
+	global $pdo;
+	$sessionKey = $request['session_key'] ?? '';
+	$query = trim($request['query'] ?? '');
+
+	if ($query === '') {
+		return array("returnCode" => '1', 'message' => "No query", 'data' => []);
+	}
+
+	$getUser = $pdo->prepare("SELECT userid FROM sessions WHERE session_id = ?");
+	$getUser->execute([$sessionKey]);
+	$userR = $getUser->fetch(PDO::FETCH_ASSOC);
+	if (!$userR) {
+		return array("returnCode" => '0', 'message' => "Session expired. Please login again.");
+	}
+	$userId = (int)$userR['userid'];
+	$searchStmt = $pdo->prepare("SELECT u.id, u.username
+	FROM users u
+	LEFT JOIN user_friends uf ON uf.user_id = ? AND uf.friend_id = u.id
+	WHERE u.id != ?
+	AND uf.id IS NULL
+	AND LOWER(u.username) LIKE LOWER(?)
+	ORDER BY u.username ASC
+	LIMIT 15");
+	$searchStmt->execute([$userId, $userId, "%$query%"]);
+	$rows = $searchStmt->fetchAll(PDO::FETCH_ASSOC);
+
+	return array("returnCode" => '1', 'message' => "Users found", 'data' => $rows);
+break;
 case "email_status":
 
 
@@ -725,6 +963,11 @@ return array("returnCode" => '1', "data" => [
 >>>>>>> eb838d9044a5d20129ccc220c9ee470a018050c9
 
 }
+catch (\Throwable $e) {
+	$errorMsg = "BACKEND: " . $e->getMessage() . " om line " . $e->getLine();
+	echo $errorMsg . PHP_EOL;
+	return array("returnCode" => '0', 'message' => $errorMsg);
+}}
 
 $server = new rabbitMQServer("testRabbitMQ.ini","testServer");
 
