@@ -58,6 +58,7 @@ else {
 	<img src="https://images.igdb.com/igdb/image/upload/t_cover_big/<?php echo $game['cover_url']; ?>.jpg" class="img-fluid w-100 h-100" style="object-fit: cover;" alt="Cover">
 </div>
 <<<<<<< HEAD
+<<<<<<< HEAD
 <div class="col-md-8 p-4 bg-white">
 	<h1 class="fw-bold mb-1"><?php echo htmlspecialchars($game['title']); ?></h1>
 	<p class="text-muted">Released on: <?php echo htmlspecialchars($game['release_date']); ?></p>
@@ -94,6 +95,8 @@ else {
 			<a href="javascript:history.back()" class="btn btn-outline-secondary btn-lg ms-2">Back to Results</a>
 		</div>
 =======
+=======
+>>>>>>> eb838d9044a5d20129ccc220c9ee470a018050c9
 <div class="col-md-8 p-4 gamer-card">
 <h1 class="fw-bold mb-1"><?php echo htmlspecialchars($game['title']); ?></h1>
 <p class="text-white ">Release Date: <?php echo htmlspecialchars($game['release_date']); ?></p>
@@ -130,7 +133,10 @@ else {
     <br>
     <a href="javascript:history.back()" class="btn btn-outline-secondary btn-lg ms-2">Back to Results</a>
 </div>
+<<<<<<< HEAD
 >>>>>>> b109d9c7515b8dc4c7a9460ac875e33558aab8aa
+=======
+>>>>>>> eb838d9044a5d20129ccc220c9ee470a018050c9
 </div>
 </div>
 </div>

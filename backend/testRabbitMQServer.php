@@ -75,15 +75,17 @@ if ($mydb->connect_error){
 
 function register($fName,$lName,$email,$phone,$username,$password)
 {
-	global $db_host, $db_user, $db_pass, $db_name;
+global $db_host, $db_user, $db_pass, $db_name;
 
-	$mydb = new mysqli($db_host, $db_user, $db_pass, $db_name);
-	if ($mydb->connect_error){
-		return array("status" => false, "message" => "Connection to Database failed"); 
-	}
+        $mydb = new mysqli($db_host, $db_user, $db_pass, $db_name);
+
+    if ($mydb->connect_error){
+            return array("status" => false, "message" => "Connection to Database failed"); }
+
 	$stmt = $mydb->prepare("SELECT username, email FROM users WHERE username = ? OR email = ?");
 	$stmt->bind_param("ss", $username, $email);
 	$stmt->execute();
+<<<<<<< HEAD
 <<<<<<< HEAD
 	//	$stmt->store_result();
 	$stmt->bind_result($tempUser, $tempEmail);
@@ -95,15 +97,20 @@ $stmt->bind_result($tempUser, $tempEmail);
 
 if ($stmt->fetch()) {
 >>>>>>> b109d9c7515b8dc4c7a9460ac875e33558aab8aa
+=======
+$stmt->bind_result($tempUser, $tempEmail);
+
+if ($stmt->fetch()) {
+>>>>>>> eb838d9044a5d20129ccc220c9ee470a018050c9
 		$stmt->close();
 		$mydb->close();
 		if (strtolower($tempUser) === strtolower($username)) {
-			return array("status" => false, "message" => "Username is already taken");
+		return array("status" => false, "message" => "Username is already taken");
 		}
 		else {
-			return array("status" => false, "message" => "Email already in use. Please Login");
+		return array("status" => false, "message" => "Email already in use. Please Login");
 		}
-	}
+}
 	$stmt->close();
 
 	$hash = password_hash($password, PASSWORD_DEFAULT);
@@ -127,12 +134,17 @@ $session = $mydb->prepare("INSERT INTO sessions (userid, session_id) VALUES (?, 
 
 		$mydb->close();
 <<<<<<< HEAD
+<<<<<<< HEAD
 			return array("status" => true, "message" => "You have Registered successfully!");
 		}
 =======
 		return array("status" => true, "message" => "You have Registered successfully!", "session_key" => $sessionKey);
 	}
 >>>>>>> b109d9c7515b8dc4c7a9460ac875e33558aab8aa
+=======
+		return array("status" => true, "message" => "You have Registered successfully!", "session_key" => $sessionKey);
+	}
+>>>>>>> eb838d9044a5d20129ccc220c9ee470a018050c9
 	else {
 		$createUser->close();
 		$mydb->close();
@@ -145,11 +157,14 @@ function requestProcessor($request)
 	global $pdo, $client_id, $client_secret;
 	echo "received request".PHP_EOL;
 <<<<<<< HEAD
+<<<<<<< HEAD
 	var_dump($request);
 	if(!isset($request['type']))
 	{
 		return "ERROR: unsupported message type";
 =======
+=======
+>>>>>>> eb838d9044a5d20129ccc220c9ee470a018050c9
   var_dump($request);
 	if(!isset($request['type']))
   {
@@ -175,47 +190,46 @@ function requestProcessor($request)
 
 	if (!$userR) {
 	return array("returnCode" => '0', 'message' => "Login Again");
+<<<<<<< HEAD
 >>>>>>> b109d9c7515b8dc4c7a9460ac875e33558aab8aa
+=======
+>>>>>>> eb838d9044a5d20129ccc220c9ee470a018050c9
 	}
-	switch ($request['type'])
-	{
-		case "login":
-			return doLogin($request['username'],$request['password']);
-		case "register":
-			$test_hash = password_hash($request['password'], PASSWORD_DEFAULT);
-			echo "Hashed: " .  $test_hash . PHP_EOL;
-			return doRegister($request['fName'],$request['lName'],$request['email'],$request['username'],$request['password']);
-	    //user preferences start    
-		case "get_preferences":
-			global $pdo;
-			$sessionKey = $request['session_key'];
+	$userId = $userR['userid'];
+$evryPlatform = $pdo->query("SELECT platformId as id, name FROM platforms ORDER BY name ASC")->fetchAll(PDO::FETCH_ASSOC);
+$evryGenre = $pdo->query("SELECT genreId as id, name FROM genres ORDER BY name ASC")->fetchAll(PDO::FETCH_ASSOC);
 
-			$gUser = $pdo->prepare("SELECT userid FROM sessions WHERE session_id = ?");
-			$gUser->execute([$sessionKey]);
-			$userR = $gUser->fetch(PDO::FETCH_ASSOC);
+$usrPlatsSt = $pdo->prepare("SELECT platform_id FROM user_platforms WHERE user_id = ?");
+$usrPlatsSt->execute([$userId]);
+$usrPlats = $usrPlatsSt->fetchALL(PDO::FETCH_COLUMN);
 
-			if (!$userR) {
-				return array("returnCode" => '0', 'message' => "Login Again");
-			}
-			$userId = $userR['userid'];
-			$evryPlatform = $pdo->query("SELECT platformId as id, name FROM platforms ORDER BY name ASC")->fetchAll(PDO::FETCH_ASSOC);
-			$evryGenre = $pdo->query("SELECT genreId as id, name FROM genres ORDER BY name ASC")->fetchAll(PDO::FETCH_ASSOC);
+$usrGensSt = $pdo->prepare("SELECT genre_id FROM user_genres WHERE user_id = ?");
+$usrGensSt->execute([$userId]);
+$usrGens = $usrGensSt->fetchALL(PDO::FETCH_COLUMN);
 
-			$usrPlatsSt = $pdo->prepare("SELECT platform_id FROM user_platforms WHERE user_id = ?");		
-			$usrPlatsSt->execute([$userId]);
-			$usrPlats = $usrPlatsSt->fetchALL(PDO::FETCH_COLUMN);
+$data = [
 
-			$usrGensSt = $pdo->prepare("SELECT genre_id FROM user_genres WHERE user_id = ?");
-			$usrGensSt->execute([$userId]);
-			$usrGens = $usrGensSt->fetchALL(PDO::FETCH_COLUMN);
+'all_platforms' => $evryPlatform,
+'all_genres' => $evryGenre,
+'user_platforms' => $usrPlats,
+'user_genres' => $usrGens
 
-			$data = [
+];
+return array("returnCode" => '1', 'message' => "Preferences Loaded", 'data' => $data);
+	    
+case "save_preferences":
+	global $pdo;
+$sessionKey = $request['session_key'];
+$platforms = $request['platforms'] ?? [];
+$genres = $request['genres'] ?? [];
 
-				'all_platforms' => $evryPlatform,
-				'all_genres' => $evryGenre,
-				'user_platforms' => $usrPlats,
-				'user_genres' => $usrGens
+$gUser = $pdo->prepare("SELECT userid FROM sessions WHERE session_id = ?");
+$gUser->execute([$sessionKey]);
+$userR = $gUser->fetch(PDO::FETCH_ASSOC);
+    if (!$userR) return array("returnCode" => '0', "message" => "Session expired");
+$userId = $userR['userid'];
 
+<<<<<<< HEAD
 <<<<<<< HEAD
 			];
 			return array("returnCode" => '1', 'message' => "Preferences Loaded", 'data' => $data);	    
@@ -265,6 +279,8 @@ function requestProcessor($request)
 			$stmt->execute(["%$searchTerm%"]);
 			$local_results = $stmt->fetchAll(PDO::FETCH_ASSOC);
 =======
+=======
+>>>>>>> eb838d9044a5d20129ccc220c9ee470a018050c9
 $pdo->beginTransaction();
 $pdo->prepare("DELETE FROM user_platforms WHERE user_id = ?")->execute([$userId]);
 $pdo->prepare("DELETE FROM user_genres WHERE user_id = ?")->execute([$userId]);
@@ -291,43 +307,42 @@ $platStmt = $pdo->prepare("INSERT INTO user_platforms (user_id, platform_id) VAL
 	    $stmt = $pdo->prepare("SELECT gameId as id, title as name, summary, cover_url as cover_image, rating FROM games WHERE title LIKE ?");
 	    $stmt->execute(["%$searchTerm%"]);
 	    $local_results = $stmt->fetchAll(PDO::FETCH_ASSOC);
+<<<<<<< HEAD
 >>>>>>> b109d9c7515b8dc4c7a9460ac875e33558aab8aa
+=======
+>>>>>>> eb838d9044a5d20129ccc220c9ee470a018050c9
 
-			if (!empty($local_results)) {
-				return array("returnCode" => '1', 'message' => "Loaded from local DB", 'data' => $local_results);
-			}
+	    if (!empty($local_results)) {
+	    return array("returnCode" => '1', 'message' => "Loaded from local DB", 'data' => $local_results);
+	    }
 
-			$token = getIGDBToken($client_id, $client_secret);
-			if (!$token) {
-				return array("returnCode" => '0', 'message' => "API Auth Failed");
-			}
+	    $token = getIGDBToken($client_id, $client_secret);
+if (!$token) {
+        return array("returnCode" => '0', 'message' => "API Auth Failed");
+    }
 
-			$api_results = harvestGameData($searchTerm, $pdo, $client_id, $token);
-		
-			if (!empty($api_results)) {
-				$format = [];
-				foreach ($api_results as $r) {
-					$format[] = [
-						'id' => $r['id'],
-						'name' => $r['name'],
-						'summary' => $r['summary'] ?? "",
-						'cover_image' => $r['cover']['image_id'] ?? null,
-						'rating' => $r['rating'] ??null
-					];
-				}
-			return array("returnCode" => '1', 'message' => "Harvested from IGDB", 'data' => $format);
-			} 
-			else {
-				return array("returnCode" => '0', 'message' => "Game not found anywhere");
-			}
-		case "get_game_details":
-			global $pdo;
-			$gameId = $request['game_id'];
+    $api_results = harvestGameData($searchTerm, $pdo, $client_id, $token);
 
-			$stmt = $pdo->prepare("SELECT g.*, GROUP_CONCAT(p.name SEPARATOR ', ') as platform_list FROM games g LEFT JOIN game_platforms gp ON g.gameId = gp.game_id LEFT JOIN platforms p ON gp.platform_id = p.platformId WHERE g.gameId = ? GROUP BY g.gameId");
-			$stmt->execute([$gameId]);
-			$data = $stmt->fetch(PDO::FETCH_ASSOC);
+    if (!empty($api_results)) {
+	    $format = [];
+	    foreach ($api_results as $r) {
+		    $format[] = [
+			    'id' => $r['id'],
+			    'name' => $r['name'],
+			    'summary' => $r['summary'] ?? "",
+			    'cover_image' => $r['cover']['image_id'] ?? null,
+			    'rating' => $r['rating'] ??null
+		    ];
+	    }
+        return array("returnCode" => '1', 'message' => "Harvested from IGDB", 'data' => $format);
+    } else {
+        return array("returnCode" => '0', 'message' => "Game not found anywhere");
+    }
+    case "get_game_details":
+	    global $pdo;
+	    $gameId = $request['game_id'];
 
+<<<<<<< HEAD
 <<<<<<< HEAD
 			if ($data) {
 				return array("returnCode" => '1', 'message' => "Data harvesting successful", 'data' => $data);
@@ -348,6 +363,8 @@ $platStmt = $pdo->prepare("INSERT INTO user_platforms (user_id, platform_id) VAL
 				return array("returnCode" => '0', 'message' => "Login again please");
 			}
 =======
+=======
+>>>>>>> eb838d9044a5d20129ccc220c9ee470a018050c9
 	    $stmt = $pdo->prepare("SELECT g.*, GROUP_CONCAT(p.name SEPARATOR ', ') as platform_list FROM games g LEFT JOIN game_platforms gp ON g.gameId = gp.game_id LEFT JOIN platforms p ON gp.platform_id = p.platformId WHERE g.gameId = ? GROUP BY g.gameId");
 	    $stmt->execute([$gameId]);
 	    $data = $stmt->fetch(PDO::FETCH_ASSOC);
@@ -365,6 +382,7 @@ case "addToLibrary":
 	$sessionKey = $request['session_key'];
 	$gameId = $request['game_id'];
 	$status = $request['status'];
+<<<<<<< HEAD
 >>>>>>> b109d9c7515b8dc4c7a9460ac875e33558aab8aa
 
 			$userId = $userR['userid'];
@@ -560,6 +578,15 @@ case "addToLibrary":
 <<<<<<< HEAD
 	return array("returnCode" => '0', 'message'=>"Server received request and processed");
 =======
+=======
+
+	$getUser = $pdo->prepare("SELECT userid FROM sessions WHERE session_id = ?");
+	$getUser->execute([$sessionKey]);
+	$userR = $getUser->fetch(PDO::FETCH_ASSOC);
+	if (!$userR) {
+	return array("returnCode" => '0', 'message' => "Login again please");
+	}
+>>>>>>> eb838d9044a5d20129ccc220c9ee470a018050c9
 
 	$userId = $userR['userid'];
 
@@ -692,7 +719,10 @@ return array("returnCode" => '1', "data" => [
 //end cases.. 
   }
   return array("returnCode" => '0', 'message'=>"Server received request and processed");
+<<<<<<< HEAD
 >>>>>>> b109d9c7515b8dc4c7a9460ac875e33558aab8aa
+=======
+>>>>>>> eb838d9044a5d20129ccc220c9ee470a018050c9
 
 }
 
