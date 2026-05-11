@@ -12,10 +12,14 @@ if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
 $myGames = [];
 $error_msg = "";
 
+$friend = trim($_GET['friend'] ?? '');
+$iml = ($friend === '');
+
 $client = new rabbitMQClient("../backend/testRabbitMQ.ini", "testServer");
 $request = array();
 $request['type'] = "get_user_library";
 $request['session_key'] = $_SESSION['session_key'];
+$request['target_user'] = $friend;
 
 $response = $client->send_request($request);
 if (isset($response['returnCode']) && $response['returnCode'] == '1') {
@@ -28,6 +32,8 @@ if (isset($response['returnCode']) && $response['returnCode'] == '1') {
 <!DOCTYPE html>
 <html>
 <head>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
 <meta charset="UTF-8">
     <title>My Game Library</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -36,12 +42,18 @@ if (isset($response['returnCode']) && $response['returnCode'] == '1') {
 <body class="bg-light">
 <?php include('navBar.php'); ?>
 <div class="container mt-5">
-  <h1 class="mb-4 fw-bold">My Library</h1>
+  <h1 class="mb-4 fw-bold">
+<?php echo $iml ? "My Library" : htmlspecialchars($friend) . "'s Library"; ?>
+</h1>
+<?php if ($iml): ?>
   <a href="search_results.php" class="btn btn-outline-primary mb-4">Search Another Game</a>
+<?php else: ?>
+	<a href="FriendsLibrary.php" class="btn btn-outline-secondary mb-4">&larr; Back to Friends</a>
+<?php endif; ?>
 <?php if (empty($myGames)): ?>
 <div class="alert alert-warning text-center">
 <?php echo htmlspecialchars($error_msg); ?><br>
-            Add games to your watchlist! 
+<?php echo $iml ? "Add games to your watchlist!" : "They have not added any games yet!"; ?>
 </div>
 <?php else: ?>
  <div class="row">
@@ -55,9 +67,11 @@ if (isset($response['returnCode']) && $response['returnCode'] == '1') {
  <span class="badge bg-secondary text-uppercase"><?php echo htmlspecialchars($game['status']); ?></span>
 </div>
  </a>
+<?php if ($iml): ?>
 <div class="card-footer bg-white border-0 text-center pt-2">
 <a href="removeGame.php?id=<?php echo $game['gameId']; ?>" class="btn btn-sm btn-danger w-100">Remove from Library</a>
 </div>
+<?php endif; ?>
  </div>
   </div>
  <?php endforeach; ?>
